@@ -29,7 +29,6 @@ func(r *AdvertPostgres) Add(advert AdvertAPI.AdvertInput)(int, error){
 		err = tx.Rollback()
 		return 0, err
 	}
-	fmt.Println(advert.Images)
 	if len(advert.Images) != 0{
 		for _, path := range advert.Images{
 			createAdvertImages := fmt.Sprintf("INSERT INTO %s (path, advert_id) VALUES($1, $2)", advertImages)
@@ -41,4 +40,41 @@ func(r *AdvertPostgres) Add(advert AdvertAPI.AdvertInput)(int, error){
 		}
 	}
 	return id, tx.Commit()
+}
+
+func(r *AdvertPostgres) GetAll()([]AdvertAPI.AdvertInfo, error){
+	var adverts []AdvertAPI.AdvertInfo
+	rows, err := r.db.Query("SELECT * FROM adverts")
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next(){
+		var advert AdvertAPI.AdvertInfo
+		if err := rows.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Category, &advert.Location,
+			&advert.PhoneNumber, &advert.Price, &advert.PublishDate, &advert.Views); err != nil{
+			return adverts, err
+		}
+		//imageRow, err := r.db.Query("SELECT path FROM images WHERE advert_id = ?", advert.Id)
+		//if err != nil {
+		//	return nil, err
+		//}
+		//for imageRow.Next(){
+		//	var advertImage AdvertAPI.Image
+		//	if err := imageRow.Scan(&advertImage); err != nil{
+		//		return adverts, err
+		//	}
+		//	advert = append(advert.Images, advertImage)
+		//}
+		adverts = append(adverts, advert)
+	}
+	if err = rows.Err(); err != nil {
+		return adverts, err
+	}
+
+	//fmt.Println(rows)
+	//defer rows.Close()
+	//for rows.Next()
+
+
+	return adverts, err
 }

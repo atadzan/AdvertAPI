@@ -16,3 +16,8 @@ func NewAdvertService(repo repository.Advert) *AdvertService{
 func(s *AdvertService) Add(advert AdvertAPI.AdvertInput)(int, error){
 	return s.repo.Add(advert)
 }
+
+func(s *AdvertService) GetAll()([]AdvertAPI.AdvertInfo, error){
+	return s.repo.GetAll()
+
+}

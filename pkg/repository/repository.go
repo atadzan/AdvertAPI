@@ -7,6 +7,7 @@ import (
 
 type Advert interface {
 	Add(advert AdvertAPI.AdvertInput)(int, error)
+	GetAll()([]AdvertAPI.AdvertInfo, error)
 }
 
 type Repository struct {
