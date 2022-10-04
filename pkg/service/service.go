@@ -8,6 +8,7 @@ import (
 type Advert interface {
 	Add(advert AdvertAPI.AdvertInput)(int, error)
 	GetAll()([]AdvertAPI.AdvertInfo, error)
+	GetById(id int)(AdvertAPI.AdvertInfo, error)
 }
 
 type Service struct{

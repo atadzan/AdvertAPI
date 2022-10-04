@@ -20,7 +20,7 @@ type AdvertInfo struct {
 	Price       int     `json:"price"`
 	PublishDate string  `json:"publish_date"`
 	Views       string  `json:"views"`
-	Images      []Image `json:"images"`
+	//Images      []Image `json:"images"`
 }
 type Image struct {
 	ImagePath string `json:"image_path"`

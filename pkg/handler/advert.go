@@ -4,6 +4,7 @@ import (
 	"github.com/atadzan/AdvertAPI"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
 func(h *Handler) addAdvert(c *gin.Context){
@@ -36,4 +37,18 @@ func(h *Handler) getAdverts(c *gin.Context){
 	c.JSON(http.StatusOK, getAllAdvertResponse{
 		Data: adverts,
 	})
+}
+
+func(h *Handler) getAdvertById(c *gin.Context){
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, "invalid id param")
+		return
+	}
+	advert, err := h.services.Advert.GetById(id)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, advert)
 }

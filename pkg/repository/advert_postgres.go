@@ -54,27 +54,20 @@ func(r *AdvertPostgres) GetAll()([]AdvertAPI.AdvertInfo, error){
 			&advert.PhoneNumber, &advert.Price, &advert.PublishDate, &advert.Views); err != nil{
 			return adverts, err
 		}
-		//imageRow, err := r.db.Query("SELECT path FROM images WHERE advert_id = ?", advert.Id)
-		//if err != nil {
-		//	return nil, err
-		//}
-		//for imageRow.Next(){
-		//	var advertImage AdvertAPI.Image
-		//	if err := imageRow.Scan(&advertImage); err != nil{
-		//		return adverts, err
-		//	}
-		//	advert = append(advert.Images, advertImage)
-		//}
 		adverts = append(adverts, advert)
 	}
 	if err = rows.Err(); err != nil {
 		return adverts, err
 	}
 
-	//fmt.Println(rows)
-	//defer rows.Close()
-	//for rows.Next()
-
-
 	return adverts, err
+}
+
+func(r *AdvertPostgres) GetById(id int)(AdvertAPI.AdvertInfo, error){
+	var advert AdvertAPI.AdvertInfo
+	query := fmt.Sprintf("SELECT * FROM %s WHERE id = $1", advertsTable)
+	row := r.db.QueryRow(query, id)
+	err := row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Category, &advert.Location,
+		&advert.PhoneNumber, &advert.Price, &advert.PublishDate, &advert.Views)
+	return advert, err
 }
