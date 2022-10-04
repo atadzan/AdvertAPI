@@ -1,0 +1,8 @@
+port: "8000"
+db:
+  Host: "localhost"
+  Port: "5432"
+  Username: "admin1"
+  Password: "22admin02"
+  DBName: "advertdb"
+  SSLMode: "disable"
