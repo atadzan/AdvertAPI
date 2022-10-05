@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"github.com/atadzan/AdvertAPI"
 	"github.com/gin-gonic/gin"
 	"io"
@@ -12,10 +11,56 @@ import (
 )
 
 func(h *Handler) addAdvert(c *gin.Context){
-	var advert AdvertAPI.AdvertInput
-	if err := c.BindJSON(&advert); err != nil {
+	form, err := c.MultipartForm()
+	if err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
+	}
+	var advert AdvertAPI.AdvertInput
+	advert.Title = c.PostForm("title")
+	advert.Description = c.PostForm("description")
+	advert.Category = c.PostForm("category")
+	advert.Location = c.PostForm("location")
+	advert.PhoneNumber = c.PostForm("phone_number")
+	advert.Price, _ = strconv.Atoi(c.PostForm("price"))
+	images := form.File["images"]
+	var file AdvertAPI.AdvertImage
+	if images != nil {
+		for i := range images{
+			image, err := images[i].Open()
+			if err != nil {
+				newErrorResponse(c, http.StatusNoContent, err.Error())
+				return
+			}
+			defer image.Close()
+			file.Fname = images[i].Filename
+			file.Fsize = images[i].Size
+			file.Ftype = images[i].Header.Get("Content-type")
+			//	Create file
+			tempFile, err := os.CreateTemp("assets/uploadImages", "*.jpg")
+			if err != nil {
+				newErrorResponse(c, http.StatusInternalServerError, err.Error())
+				return
+			}
+			filepath := tempFile.Name()
+			file.Path = filepath
+
+			//read all the contents of our uploaded file into a byte array
+			fileBytes, err := io.ReadAll(image)
+			if err != nil {
+				newErrorResponse(c, http.StatusInternalServerError, err.Error())
+				return
+			}
+
+			//Write this byte array to our temporary array
+			_, err = tempFile.Write(fileBytes)
+			if err != nil {
+				newErrorResponse(c, http.StatusInternalServerError, err.Error())
+				return
+			}
+
+			advert.Images = append(advert.Images, file)
+		}
 	}
 	id, err := h.services.Advert.Add(advert)
 	if err != nil{
@@ -77,57 +122,57 @@ func(h *Handler) getAdvertById(c *gin.Context){
 	c.JSON(http.StatusOK, advert)
 }
 
-func(h *Handler) uploadImage(c *gin.Context){
-	//name := c.PostForm("name")
-	form, err := c.MultipartForm()
-	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, err.Error())
-	}
-	files := form.File["files"]
-	for i := range files {
-		file, err := files[i].Open()
-		if err != nil {
-			newErrorResponse(c, http.StatusNoContent, err.Error())
-			return
-		}
-		defer file.Close()
-		fname := files[i].Filename
-		fsize := files[i].Size
-		//kilobytes := fsize / 1024
-		ftype := files[i].Header.Get("Content-type")
-		fmt.Println(fname)
-		fmt.Printf("%t", fsize)
-
-		fmt.Println(ftype)
-
-		//	Create file
-		tempFile, err := os.CreateTemp("assets/uploadImages", "upload-*.jpg")
-		if err != nil {
-			newErrorResponse(c, http.StatusInternalServerError, err.Error())
-			return
-		}
-		filepath := tempFile.Name()
-
-		//read all the contents of our uploaded file into a byte array
-		fileBytes, err := io.ReadAll(file)
-		if err != nil {
-			newErrorResponse(c, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		//Write this byte array to our temporary array
-		_, err = tempFile.Write(fileBytes)
-		if err != nil {
-			newErrorResponse(c, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		//return upload file message
-		insForm, err := h.services.AddDB(fname, ftype, filepath, fsize)
-		//defer tempFile.Close()
-		fmt.Println(insForm)
-	}
-}
+//func(h *Handler) uploadImage(c *gin.Context){
+//	//name := c.PostForm("name")
+//	form, err := c.MultipartForm()
+//	if err != nil {
+//		newErrorResponse(c, http.StatusBadRequest, err.Error())
+//	}
+//	files := form.File["files"]
+//	for i := range files {
+//		file, err := files[i].Open()
+//		if err != nil {
+//			newErrorResponse(c, http.StatusNoContent, err.Error())
+//			return
+//		}
+//		defer file.Close()
+//		fname := files[i].Filename
+//		fsize := files[i].Size
+//		//kilobytes := fsize / 1024
+//		ftype := files[i].Header.Get("Content-type")
+//		fmt.Println(fname)
+//		fmt.Printf("%t", fsize)
+//
+//		fmt.Println(ftype)
+//
+//		//	Create file
+//		tempFile, err := os.CreateTemp("assets/uploadImages", "upload-*.jpg")
+//		if err != nil {
+//			newErrorResponse(c, http.StatusInternalServerError, err.Error())
+//			return
+//		}
+//		filepath := tempFile.Name()
+//
+//		//read all the contents of our uploaded file into a byte array
+//		fileBytes, err := io.ReadAll(file)
+//		if err != nil {
+//			newErrorResponse(c, http.StatusInternalServerError, err.Error())
+//			return
+//		}
+//
+//		//Write this byte array to our temporary array
+//		_, err = tempFile.Write(fileBytes)
+//		if err != nil {
+//			newErrorResponse(c, http.StatusInternalServerError, err.Error())
+//			return
+//		}
+//
+//		//return upload file message
+//		//insForm, err := h.services.AddDB(fname, ftype, filepath, fsize)
+//		//defer tempFile.Close()
+//		//fmt.Println(insForm)
+//	}
+//}
 
 func(h *Handler) getImage(c *gin.Context){
 	id, err := strconv.Atoi(c.Param("id"))

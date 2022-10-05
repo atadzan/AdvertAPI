@@ -29,8 +29,8 @@ func(s *AdvertService) CountAdverts()(int, error){
 	return s.repo.CountAdverts()
 }
 
-func(s *AdvertService) AddDB(fname, ftype, filepath string, fsize int64)(string, error){
-	return s.repo.AddDB(fname, ftype, filepath, fsize)
+func(s *AdvertService) AddDB(file AdvertAPI.AdvertImage)(string, error){
+	return s.repo.AddDB(file)
 }
 
 func(s *AdvertService) GetImage(id int)([]AdvertAPI.AdvertImage, error){

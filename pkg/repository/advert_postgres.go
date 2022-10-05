@@ -31,8 +31,8 @@ func(r *AdvertPostgres) Add(advert AdvertAPI.AdvertInput)(int, error){
 	}
 	if len(advert.Images) != 0{
 		for _, path := range advert.Images{
-			createAdvertImages := fmt.Sprintf("INSERT INTO %s (path, advert_id) VALUES($1, $2)", advertImages)
-			_, err := tx.Exec(createAdvertImages, path.ImagePath, id )
+			createAdvertImages := fmt.Sprintf("INSERT INTO %s (fname, fsize, ftype, path, advert_id) VALUES($1, $2, $3, $4, $5)", advertImages)
+			_, err := tx.Exec(createAdvertImages, path.Fname, path.Fsize, path.Ftype, path.Path, id )
 			if err != nil {
 				err = tx.Rollback()
 				return 0, err
@@ -77,9 +77,9 @@ func(r *AdvertPostgres) CountAdverts()(int, error){
 	return count, err
 }
 
-func(r *AdvertPostgres)AddDB(fname, ftype, filepath string, fsize int64)(string, error){
-	query:= fmt.Sprintf("INSERT INTO %s (fname, fsize, ftype, path) VALUES($1, $2, $3, $4)", advertImages)
-	_, err := r.db.Exec(query, fname, fsize, ftype, filepath)
+func(r *AdvertPostgres)AddDB(file AdvertAPI.AdvertImage)(string, error){
+	query:= fmt.Sprintf("INSERT INTO %s (fname, fsize, ftype, path, advert_id) VALUES($1, $2, $3, $4, $5)", advertImages)
+	_, err := r.db.Exec(query, file.Fname, file.Fsize, file.Ftype, file.Path, file.AdvertId)
 	if err != nil {
 		return err.Error(), nil
 	}
