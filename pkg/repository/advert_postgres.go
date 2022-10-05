@@ -8,7 +8,7 @@ import (
 )
 
 type AdvertPostgres struct {
-	db *sqlx.DB
+	db         *sqlx.DB
 }
 
 func NewAdvertPostgres(db *sqlx.DB) *AdvertPostgres{
@@ -42,24 +42,21 @@ func(r *AdvertPostgres) Add(advert AdvertAPI.AdvertInput)(int, error){
 	return id, tx.Commit()
 }
 
-func(r *AdvertPostgres) GetAll()([]AdvertAPI.AdvertInfo, error){
+func(r *AdvertPostgres) GetAll(advertPerPage, offset int)([]AdvertAPI.AdvertInfo, error){
 	var adverts []AdvertAPI.AdvertInfo
-	rows, err := r.db.Query("SELECT * FROM adverts")
+	query := fmt.Sprintf("SELECT * FROM %s ORDER BY publish_date DESC LIMIT $1 OFFSET $2", advertsTable)
+	row, err := r.db.Query(query, advertPerPage, offset)
 	if err != nil {
 		return nil, err
 	}
-	for rows.Next(){
+	for row.Next(){
 		var advert AdvertAPI.AdvertInfo
-		if err := rows.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Category, &advert.Location,
+		if err := row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Category, &advert.Location,
 			&advert.PhoneNumber, &advert.Price, &advert.PublishDate, &advert.Views); err != nil{
 			return adverts, err
 		}
 		adverts = append(adverts, advert)
 	}
-	if err = rows.Err(); err != nil {
-		return adverts, err
-	}
-
 	return adverts, err
 }
 
@@ -70,4 +67,12 @@ func(r *AdvertPostgres) GetById(id int)(AdvertAPI.AdvertInfo, error){
 	err := row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Category, &advert.Location,
 		&advert.PhoneNumber, &advert.Price, &advert.PublishDate, &advert.Views)
 	return advert, err
+}
+
+func(r *AdvertPostgres) CountAdverts()(int, error){
+	var count int
+	query := fmt.Sprintf("SELECT COUNT(id) AS count FROM %s", advertsTable)
+	row := r.db.QueryRow(query)
+	err := row.Scan(&count)
+	return count, err
 }

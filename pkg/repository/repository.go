@@ -7,8 +7,9 @@ import (
 
 type Advert interface {
 	Add(advert AdvertAPI.AdvertInput)(int, error)
-	GetAll()([]AdvertAPI.AdvertInfo, error)
+	GetAll(advertPerPage, offset int)([]AdvertAPI.AdvertInfo, error)
 	GetById(id int)(AdvertAPI.AdvertInfo, error)
+	CountAdverts()(int, error)
 }
 
 type Repository struct {
