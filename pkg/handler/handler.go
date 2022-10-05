@@ -21,6 +21,8 @@ func (h *Handler) InitRoutes() *gin.Engine{
 		advert.POST("/", h.addAdvert)
 		advert.GET("/", h.getAdverts)
 		advert.GET("/:id", h.getAdvertById)
+		advert.POST("/image", h.uploadImage)
+		advert.GET("/image/:id", h.getImage)
 	}
 	return router
 }

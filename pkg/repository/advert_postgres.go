@@ -76,3 +76,35 @@ func(r *AdvertPostgres) CountAdverts()(int, error){
 	err := row.Scan(&count)
 	return count, err
 }
+
+func(r *AdvertPostgres)AddDB(fname, ftype, filepath string, fsize int64)(string, error){
+	query:= fmt.Sprintf("INSERT INTO %s (fname, fsize, ftype, path) VALUES($1, $2, $3, $4)", advertImages)
+	_, err := r.db.Exec(query, fname, fsize, ftype, filepath)
+	if err != nil {
+		return err.Error(), nil
+	}
+	return "Success", nil
+}
+
+func(r *AdvertPostgres) GetImage(id int)([]AdvertAPI.AdvertImage, error){
+	query := fmt.Sprintf(" SELECT * FROM %s WHERE id=$1", advertImages)
+	row, err := r.db.Query(query, id)
+	if err != nil {
+		return nil, err
+	}
+	upld := AdvertAPI.AdvertImage{}
+	var res []AdvertAPI.AdvertImage
+	for row.Next(){
+		err = row.Scan(&upld.Id, &upld.Fname, &upld.Fsize, &upld.Ftype, &upld.Path, &upld.AdvertId)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, upld)
+		if len(res) >= 1 {
+			return res, nil
+		}else{
+			return nil, err
+		}
+	}
+	return res, nil
+}

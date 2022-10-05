@@ -10,6 +10,8 @@ type Advert interface {
 	GetAll(advertPerPage, offset int)([]AdvertAPI.AdvertInfo, error)
 	GetById(id int)(AdvertAPI.AdvertInfo, error)
 	CountAdverts()(int, error)
+	AddDB(fname, ftype, filepath string, fsize int64)(string, error)
+	GetImage(id int)([]AdvertAPI.AdvertImage, error)
 }
 
 type Repository struct {

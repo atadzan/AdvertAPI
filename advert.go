@@ -25,3 +25,13 @@ type AdvertInfo struct {
 type Image struct {
 	ImagePath string `json:"image_path"`
 }
+type AdvertImage struct{
+	Id int
+	Fname string
+	Fsize int64
+	Ftype string
+	Path string
+	AdvertId int
+
+
+}
