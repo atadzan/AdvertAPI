@@ -9,15 +9,6 @@ type AdvertInput struct {
 	Price       int           `json:"price"`
 	Images      []AdvertImage `json:"images"`
 }
-//type AdvertUpdate struct {
-//	Title       *string        `json:"title"`
-//	Description *string        `json:"description"`
-//	Category    *string        `json:"category"`
-//	Location    *string        `json:"location"`
-//	PhoneNumber *string        `json:"phone_number"`
-//	Price       *int           `json:"price"`
-//	Images      *[]AdvertUpdateImage `json:"images"`
-//}
 
 type AdvertInfo struct {
 	Id          int           `json:"id"`
@@ -32,6 +23,7 @@ type AdvertInfo struct {
 	ImagesCount int           `json:"images_count"`
 	Images      []ImageUrl `json:"images"`
 }
+
 type AdvertImage struct {
 	Id       int
 	Fname    string
@@ -43,5 +35,4 @@ type AdvertImage struct {
 
 type ImageUrl struct {
 	URL string
-
 }

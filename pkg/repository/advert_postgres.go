@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/atadzan/AdvertAPI"
 	"github.com/jmoiron/sqlx"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -90,14 +91,27 @@ func(r *AdvertPostgres) GetAll(advertPerPage, offset int)([]AdvertAPI.AdvertInfo
 
 func(r *AdvertPostgres) GetById(id int)(AdvertAPI.AdvertInfo, error){
 	var advert AdvertAPI.AdvertInfo
+	tx, err := r.db.Begin()
 	query := fmt.Sprintf("SELECT * FROM %s WHERE id = $1", advertsTable)
-	row := r.db.QueryRow(query, id)
-	err := row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Category, &advert.Location,
+	row := tx.QueryRow(query, id)
+	err = row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Category, &advert.Location,
 		&advert.PhoneNumber, &advert.Price, &advert.PublishDate, &advert.Views, &advert.ImagesCount)
+	i, err := strconv.Atoi(advert.Views)
+	if err != nil {
+		return advert, err
+	}
+	i += 1
+	updateQuery := fmt.Sprintf("UPDATE %s SET views = $1 WHERE id = $2", advertsTable)
+	_, err = tx.Exec(updateQuery, i, id)
+	if err != nil {
+		tx.Rollback()
+		return advert, err
+	}
 	if advert.ImagesCount != 0 {
 		imageQuery := fmt.Sprintf("SELECT * FROM %s WHERE advert_id = $1", advertImages)
-		imageRow, err := r.db.Query(imageQuery, advert.Id)
+		imageRow, err := tx.Query(imageQuery, advert.Id)
 		if err != nil {
+			tx.Rollback()
 			return advert, err
 		}
 		for imageRow.Next(){
@@ -113,6 +127,7 @@ func(r *AdvertPostgres) GetById(id int)(AdvertAPI.AdvertInfo, error){
 			advert.Images = append(advert.Images, res)
 		}
 	}
+	tx.Commit()
 	return advert, err
 }
 

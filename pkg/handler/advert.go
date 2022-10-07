@@ -48,7 +48,9 @@ func InputProcess(c *gin.Context, form *multipart.Form, )(AdvertAPI.AdvertInput,
 				newErrorResponse(c, http.StatusNoContent, err.Error())
 				return advert, err
 			}
-			defer image.Close()
+			defer func() {
+				err = image.Close()
+			}()
 			file.Fname = images[i].Filename
 			file.Fsize = images[i].Size
 			file.Ftype = images[i].Header.Get("Content-type")
