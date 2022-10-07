@@ -122,68 +122,24 @@ func(h *Handler) getAdvertById(c *gin.Context){
 	c.JSON(http.StatusOK, advert)
 }
 
-//func(h *Handler) uploadImage(c *gin.Context){
-//	//name := c.PostForm("name")
-//	form, err := c.MultipartForm()
-//	if err != nil {
-//		newErrorResponse(c, http.StatusBadRequest, err.Error())
-//	}
-//	files := form.File["files"]
-//	for i := range files {
-//		file, err := files[i].Open()
-//		if err != nil {
-//			newErrorResponse(c, http.StatusNoContent, err.Error())
-//			return
-//		}
-//		defer file.Close()
-//		fname := files[i].Filename
-//		fsize := files[i].Size
-//		//kilobytes := fsize / 1024
-//		ftype := files[i].Header.Get("Content-type")
-//		fmt.Println(fname)
-//		fmt.Printf("%t", fsize)
-//
-//		fmt.Println(ftype)
-//
-//		//	Create file
-//		tempFile, err := os.CreateTemp("assets/uploadImages", "upload-*.jpg")
-//		if err != nil {
-//			newErrorResponse(c, http.StatusInternalServerError, err.Error())
-//			return
-//		}
-//		filepath := tempFile.Name()
-//
-//		//read all the contents of our uploaded file into a byte array
-//		fileBytes, err := io.ReadAll(file)
-//		if err != nil {
-//			newErrorResponse(c, http.StatusInternalServerError, err.Error())
-//			return
-//		}
-//
-//		//Write this byte array to our temporary array
-//		_, err = tempFile.Write(fileBytes)
-//		if err != nil {
-//			newErrorResponse(c, http.StatusInternalServerError, err.Error())
-//			return
-//		}
-//
-//		//return upload file message
-//		//insForm, err := h.services.AddDB(fname, ftype, filepath, fsize)
-//		//defer tempFile.Close()
-//		//fmt.Println(insForm)
-//	}
-//}
-
 func(h *Handler) getImage(c *gin.Context){
 	id, err := strconv.Atoi(c.Param("id"))
+	object, err := h.services.Advert.GetImage(id)
 	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, "invalid id param")
+		newErrorResponse(c, http.StatusBadRequest, "Invalid id param")
 		return
 	}
-	image, err := h.services.Advert.GetImage(id)
-	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+	for _, i := range object{
+		fi, err := os.Open(i.Path)
+		if err != nil {
+			newErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+		_, err = io.Copy(c.Writer, fi)
+		if err != nil {
+			newErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
 		return
 	}
-	c.JSON(http.StatusOK, image)
 }
