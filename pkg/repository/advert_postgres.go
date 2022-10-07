@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"github.com/atadzan/AdvertAPI"
 	"github.com/jmoiron/sqlx"
+	"strings"
 	"time"
 )
 
 type AdvertPostgres struct {
-	db         *sqlx.DB
+	db *sqlx.DB
 }
 
 func NewAdvertPostgres(db *sqlx.DB) *AdvertPostgres{
@@ -162,3 +163,54 @@ func(r *AdvertPostgres) Delete(id int)error{
 	return err
 }
 
+func(r *AdvertPostgres) Update(id int, advert AdvertAPI.AdvertInput)error{
+	setValues := make([]string, 0)
+	args := make([]interface{}, 0)
+	argId := 1
+
+	if advert.Title != "" {
+		setValues = append(setValues, fmt.Sprintf("title=$%d", argId))
+		args = append(args, advert.Title)
+		argId ++
+	}
+	if advert.Description != "" {
+		setValues = append(setValues, fmt.Sprintf("description=$%d", argId))
+		args = append(args, advert.Description)
+		argId ++
+	}
+	if advert.Category != "" {
+		setValues = append(setValues, fmt.Sprintf("category=$%d", argId))
+		args = append(args, advert.Category)
+		argId ++
+	}
+	if advert.Location != "" {
+		setValues = append(setValues, fmt.Sprintf("location=$%d", argId))
+		args = append(args, advert.Location)
+		argId ++
+	}
+	if advert.PhoneNumber != "" {
+		setValues = append(setValues, fmt.Sprintf("phone_number=$%d", argId))
+		args = append(args, advert.PhoneNumber)
+		argId ++
+	}
+	if advert.Price != 0 {
+		setValues = append(setValues, fmt.Sprintf("price=$%d", argId))
+		args = append(args, advert.Price)
+		argId ++
+	}
+	if len(advert.Images) != 0 {
+		for _, path := range advert.Images{
+			updateAdvertImages := fmt.Sprintf("UPDATE %s  SET fname = $1,  fsize = $2, ftype = $3, path = $4, advert_id = $5 WHERE advert_id = $6", advertImages)
+			_, err := r.db.Exec(updateAdvertImages, path.Fname, path.Fsize, path.Ftype, path.Path, id, id)
+			if err != nil {
+				return err
+			}
+		}
+
+	}
+	setQuery := strings.Join(setValues, ", ")
+	query := fmt.Sprintf("UPDATE %s SET %s,  publish_date = $%d WHERE id = $%d", advertsTable, setQuery, argId, argId+1)
+	args = append(args, time.Now(), id)
+	_, err := r.db.Exec(query, args...)
+	return err
+}

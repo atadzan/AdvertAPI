@@ -23,6 +23,7 @@ func (h *Handler) InitRoutes() *gin.Engine{
 		advert.GET("/:id", h.getAdvertById)
 		advert.GET("/image/:id", h.getImage)
 		advert.DELETE("/:id", h.deleteAdvert)
+		advert.PUT("/:id", h.updateAdvert)
 	}
 	return router
 }

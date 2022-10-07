@@ -170,25 +170,26 @@ func(h *Handler) deleteAdvert(c *gin.Context){
 	})
 }
 
-
-//func(h *Handler) updateAdvert(c *gin.Context){
-//	id, err := strconv.Atoi(c.Param("id"))
-//	if err != nil {
-//		newErrorResponse(c, http.StatusBadRequest, "invalid id param")
-//		return
-//	}
-//	form, err := c.MultipartForm()
-//	if err != nil {
-//		newErrorResponse(c, http.StatusBadRequest, err.Error())
-//		return
-//	}
-//	advert, err := InputProcess(c, form)
-//	if err != nil {
-//		newErrorResponse(c, http.StatusInternalServerError, err.Error())
-//	}
-//	if err := h.services.Advert.Update(id, advert); err != nil {
-//		newErrorResponse(c, http.StatusInternalServerError, err)
-//		return
-//	}
-//	c.JSON(http.StatusOK,"OK")
-//}
+func(h *Handler) updateAdvert(c *gin.Context){
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, "invalid id param")
+		return
+	}
+	form, err := c.MultipartForm()
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	advert, err := InputProcess(c, form)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+	}
+	if err := h.services.Advert.Update(id, advert); err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK,statusResponse{
+		Status: "Successfully updated",
+	})
+}

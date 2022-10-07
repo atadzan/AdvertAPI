@@ -37,6 +37,6 @@ func(s *AdvertService) Delete(id int)error{
 	return s.repo.Delete(id)
 }
 
-//func(s *AdvertService) Update(id int, advert AdvertAPI.AdvertInput) error{
-//	return s.repo.Update(id, advert)
-//}
+func(s *AdvertService) Update(id int, advert AdvertAPI.AdvertInput) error{
+	return s.repo.Update(id, advert)
+}

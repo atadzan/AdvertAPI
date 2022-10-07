@@ -12,6 +12,7 @@ type Advert interface {
 	CountAdverts()(int, error)
 	GetImage(id int)([]AdvertAPI.AdvertImage, error)
 	Delete(id int)error
+	Update(id int, advert AdvertAPI.AdvertInput)error
 }
 
 type Service struct{
