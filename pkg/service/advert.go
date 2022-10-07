@@ -29,3 +29,14 @@ func(s *AdvertService) CountAdverts()(int, error){
 	return s.repo.CountAdverts()
 }
 
+func(s *AdvertService) GetImage(id int)([]AdvertAPI.AdvertImage, error){
+	return s.repo.GetImage(id)
+}
+
+func(s *AdvertService) Delete(id int)error{
+	return s.repo.Delete(id)
+}
+
+func(s *AdvertService) Update(id int, advert AdvertAPI.AdvertInput) error{
+	return s.repo.Update(id, advert)
+}
