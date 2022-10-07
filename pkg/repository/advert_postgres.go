@@ -130,7 +130,7 @@ func(r *AdvertPostgres)AddDB(file AdvertAPI.AdvertImage)(string, error){
 func(r *AdvertPostgres) GetImage(id int)([]AdvertAPI.AdvertImage, error){
 	var image AdvertAPI.AdvertImage
 	var images []AdvertAPI.AdvertImage
-	query := fmt.Sprintf("SELECT * FROM %s WHERE advert_id = $1", advertImages)
+	query := fmt.Sprintf("SELECT * FROM %s WHERE id = $1", advertImages)
 	row, err := r.db.Query(query, id)
 	if err != nil {
 		return nil, err
@@ -151,4 +151,27 @@ func(r *AdvertPostgres) GetImage(id int)([]AdvertAPI.AdvertImage, error){
 	return images, nil
 }
 
+//func(r *AdvertPostgres) GetPhoto(id int)([]AdvertAPI.AdvertImage, error){
+//	var image AdvertAPI.AdvertImage
+//	var images []AdvertAPI.AdvertImage
+//	query := fmt.Sprintf("SELECT * FROM %s WHERE advert_id = $1", advertImages)
+//	row, err := r.db.Query(query, id)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	for row.Next(){
+//		err = row.Scan(&image.Id, &image.Fname, &image.Fsize, &image.Ftype, &image.Path, &image.AdvertId)
+//		if err != nil {
+//			return nil, err
+//		}
+//		images = append(images, image)
+//		if len(images) >= 1 {
+//			return images, nil
+//		}else{
+//			return nil, err
+//		}
+//	}
+//	return images, nil
+//}
 
