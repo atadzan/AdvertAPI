@@ -69,7 +69,6 @@ func(r *AdvertPostgres) GetAll(advertPerPage, offset int)([]AdvertAPI.AdvertInfo
 			if err != nil {
 				return nil, err
 			}
-
 			for imageRow.Next(){
 				var image AdvertAPI.AdvertImage
 				if imageRow != nil {
@@ -77,7 +76,10 @@ func(r *AdvertPostgres) GetAll(advertPerPage, offset int)([]AdvertAPI.AdvertInfo
 						return nil, err
 					}
 				}
-				advert.Images = append(advert.Images, image)
+				var res AdvertAPI.ImageUrl
+				url := fmt.Sprintf("http://192.168.1.181:8080/advert/image/%d", image.Id)
+				res.URL = url
+				advert.Images = append(advert.Images, res)
 			}
 		}
 		adverts = append(adverts, advert)
@@ -104,7 +106,10 @@ func(r *AdvertPostgres) GetById(id int)(AdvertAPI.AdvertInfo, error){
 					return advert, err
 				}
 			}
-			advert.Images = append(advert.Images, image)
+			var res AdvertAPI.ImageUrl
+			url := fmt.Sprintf("http://192.168.1.181:8080/advert/image/%d", image.Id)
+			res.URL = url
+			advert.Images = append(advert.Images, res)
 		}
 	}
 	return advert, err
@@ -151,27 +156,9 @@ func(r *AdvertPostgres) GetImage(id int)([]AdvertAPI.AdvertImage, error){
 	return images, nil
 }
 
-//func(r *AdvertPostgres) GetPhoto(id int)([]AdvertAPI.AdvertImage, error){
-//	var image AdvertAPI.AdvertImage
-//	var images []AdvertAPI.AdvertImage
-//	query := fmt.Sprintf("SELECT * FROM %s WHERE advert_id = $1", advertImages)
-//	row, err := r.db.Query(query, id)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	for row.Next(){
-//		err = row.Scan(&image.Id, &image.Fname, &image.Fsize, &image.Ftype, &image.Path, &image.AdvertId)
-//		if err != nil {
-//			return nil, err
-//		}
-//		images = append(images, image)
-//		if len(images) >= 1 {
-//			return images, nil
-//		}else{
-//			return nil, err
-//		}
-//	}
-//	return images, nil
-//}
+func(r *AdvertPostgres) Delete(id int)error{
+	query := fmt.Sprintf("DELETE FROM %s WHERE id= $1", advertsTable)
+	_, err := r.db.Exec(query, id)
+	return err
+}
 

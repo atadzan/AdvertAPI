@@ -10,9 +10,8 @@ type Advert interface {
 	GetAll(advertPerPage, offset int)([]AdvertAPI.AdvertInfo, error)
 	GetById(id int)(AdvertAPI.AdvertInfo, error)
 	CountAdverts()(int, error)
-	//AddDB(file AdvertAPI.AdvertImage)(string, error)
 	GetImage(id int)([]AdvertAPI.AdvertImage, error)
-	//GetPhoto(id int)([]AdvertAPI.AdvertImage, error)
+	Delete(id int)error
 }
 
 type Service struct{

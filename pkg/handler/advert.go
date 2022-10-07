@@ -154,6 +154,23 @@ func(h *Handler) getImage(c *gin.Context){
 	return
 }
 
+func(h *Handler) deleteAdvert(c *gin.Context){
+	id, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			newErrorResponse(c, http.StatusBadRequest, "invalid id param")
+			return
+		}
+	err = h.services.Advert.Delete(id)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, statusResponse{
+		Status: "ok",
+	})
+}
+
+
 //func(h *Handler) updateAdvert(c *gin.Context){
 //	id, err := strconv.Atoi(c.Param("id"))
 //	if err != nil {

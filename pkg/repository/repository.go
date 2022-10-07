@@ -12,6 +12,7 @@ type Advert interface {
 	CountAdverts()(int, error)
 	AddDB(file AdvertAPI.AdvertImage)(string, error)
 	GetImage(id int)([]AdvertAPI.AdvertImage, error)
+	Delete(id int)error
 }
 
 type Repository struct {
