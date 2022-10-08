@@ -15,12 +15,19 @@ type Advert interface {
 	Update(id int, advert AdvertAPI.AdvertInput)error
 }
 
+type Authorization interface {
+	CreateUser(user AdvertAPI.SignUpInput)(int, error)
+	GenerateToken(username, password string)(string, error)
+}
+
 type Service struct{
 	Advert
+	Authorization
 }
 
 func NewService(repos *repository.Repository) *Service{
 	return &Service{
 		Advert: NewAdvertService(repos.Advert),
+		Authorization: NewAuthService(repos.Authorization),
 	}
 }

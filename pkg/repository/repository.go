@@ -16,12 +16,19 @@ type Advert interface {
 	Update(id int, advert AdvertAPI.AdvertInput)error
 }
 
+type Authorization interface {
+	CreateUser(user AdvertAPI.SignUpInput)(int, error)
+	GetUser(username, password string)(AdvertAPI.User, error)
+}
+
 type Repository struct {
 	Advert
+	Authorization
 }
 
 func NewRepository(db *sqlx.DB) *Repository{
 	return &Repository{
 		Advert: NewAdvertPostgres(db),
+		Authorization: NewAuthPostgres(db),
 	}
 }

@@ -83,10 +83,6 @@ func InputProcess(c *gin.Context, form *multipart.Form, )(AdvertAPI.AdvertInput,
 	return advert, nil
 }
 
-type getAllAdvertResponse struct {
-	Data []AdvertAPI.AdvertInfo
-}
-
 func(h *Handler) getAdverts(c *gin.Context){
 	pageStr := c.DefaultQuery("page", "1")
 	page, err := strconv.Atoi(pageStr)
@@ -114,9 +110,7 @@ func(h *Handler) getAdverts(c *gin.Context){
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, getAllAdvertResponse{
-		Data: adverts,
-	})
+	c.JSON(http.StatusOK, adverts)
 }
 
 func(h *Handler) getAdvertById(c *gin.Context){
@@ -191,7 +185,7 @@ func(h *Handler) updateAdvert(c *gin.Context){
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK,statusResponse{
+	c.JSON(http.StatusOK, statusResponse{
 		Status: "Successfully updated",
 	})
 }

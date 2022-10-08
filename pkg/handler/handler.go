@@ -25,5 +25,11 @@ func (h *Handler) InitRoutes() *gin.Engine{
 		advert.DELETE("/:id", h.deleteAdvert)
 		advert.PUT("/:id", h.updateAdvert)
 	}
+	auth := router.Group("/auth")
+	{
+		auth.POST("sign-up", h.signUp)
+		auth.POST("sign-in", h.signIn)
+	}
+
 	return router
 }

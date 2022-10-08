@@ -8,6 +8,7 @@ import (
 const (
 	advertsTable = "adverts"
 	advertImages = "images"
+	usersTable = "users"
 )
 
 type Config struct{
