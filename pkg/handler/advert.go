@@ -189,3 +189,50 @@ func(h *Handler) updateAdvert(c *gin.Context){
 		Status: "Successfully updated",
 	})
 }
+
+func(h *Handler) addFavList(c *gin.Context){
+	userId, err := getUserId(c)
+	if err != nil {
+		return
+	}
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := h.services.Advert.AddFav(userId, id); err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, nil)
+}
+
+func(h *Handler) getFavList(c *gin.Context){
+	userId, err := getUserId(c)
+	if err != nil {
+		return
+	}
+	favAdverts, err := h.services.Advert.GetFav(userId)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, favAdverts)
+}
+
+func(h *Handler) deleteFav(c *gin.Context){
+	userId, err := getUserId(c)
+	if err != nil {
+		return
+	}
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := h.services.Advert.DeleteFav(userId, id); err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, nil)
+}

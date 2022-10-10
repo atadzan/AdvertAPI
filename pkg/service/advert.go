@@ -40,3 +40,15 @@ func(s *AdvertService) Delete(id int)error{
 func(s *AdvertService) Update(id int, advert AdvertAPI.AdvertInput) error{
 	return s.repo.Update(id, advert)
 }
+
+func(s *AdvertService) AddFav(userId, advertId int) error{
+	return s.repo.AddFav(userId, advertId)
+}
+
+func(s *AdvertService) GetFav(userId int)([]AdvertAPI.AdvertInfo, error){
+	return s.repo.GetFav(userId)
+}
+
+func(s *AdvertService) DeleteFav(userId, advertId int) error{
+	return s.repo.DeleteFav(userId, advertId)
+}

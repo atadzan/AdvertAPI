@@ -25,6 +25,8 @@ CREATE TABLE users
     id serial not null unique,
     username varchar(255) not null,
     password_hash varchar(255) not null,
+    phone_number varchar(12) not null,
     created_at timestamp(0),
-    updated_at timestamp(0)
+    updated_at timestamp(0),
+    fav_list int[]
 );

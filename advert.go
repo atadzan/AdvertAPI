@@ -36,3 +36,4 @@ type AdvertImage struct {
 type ImageUrl struct {
 	URL string
 }
+

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/atadzan/AdvertAPI"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	"strconv"
 	"strings"
 	"time"
@@ -79,7 +80,7 @@ func(r *AdvertPostgres) GetAll(advertPerPage, offset int)([]AdvertAPI.AdvertInfo
 					}
 				}
 				var res AdvertAPI.ImageUrl
-				url := fmt.Sprintf("http://192.168.1.181:8080/advert/image/%d", image.Id)
+				url := fmt.Sprintf("http://192.168.1.181:8080/api/advert/image/%d", image.Id)
 				res.URL = url
 				advert.Images = append(advert.Images, res)
 			}
@@ -122,13 +123,13 @@ func(r *AdvertPostgres) GetById(id int)(AdvertAPI.AdvertInfo, error){
 				}
 			}
 			var res AdvertAPI.ImageUrl
-			url := fmt.Sprintf("http://192.168.1.181:8080/advert/image/%d", image.Id)
+			url := fmt.Sprintf("http://192.168.1.181:8080/api/advert/image/%d", image.Id)
 			res.URL = url
 			advert.Images = append(advert.Images, res)
 		}
 	}
-	tx.Commit()
-	return advert, err
+
+	return advert, tx.Commit()
 }
 
 func(r *AdvertPostgres) CountAdverts()(int, error){
@@ -178,7 +179,7 @@ func(r *AdvertPostgres) Delete(id int)error{
 	return err
 }
 
-func(r *AdvertPostgres) Update(id int, advert AdvertAPI.AdvertInput)error{
+func(r *AdvertPostgres) Update(id int, advert AdvertAPI.AdvertInput) error{
 	setValues := make([]string, 0)
 	args := make([]interface{}, 0)
 	argId := 1
@@ -221,11 +222,99 @@ func(r *AdvertPostgres) Update(id int, advert AdvertAPI.AdvertInput)error{
 				return err
 			}
 		}
-
 	}
 	setQuery := strings.Join(setValues, ", ")
 	query := fmt.Sprintf("UPDATE %s SET %s,  publish_date = $%d WHERE id = $%d", advertsTable, setQuery, argId, argId+1)
 	args = append(args, time.Now(), id)
 	_, err := r.db.Exec(query, args...)
 	return err
+}
+
+func(r *AdvertPostgres) AddFav(userId, advertId int) error{
+	id := strconv.Itoa(advertId)
+	query := fmt.Sprintf("UPDATE %s SET fav_list = array_append(fav_list, $1) WHERE id = $2", usersTable)
+	_, err := r.db.Exec(query, id, userId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func(r *AdvertPostgres) GetFav(userId int)([]AdvertAPI.AdvertInfo, error) {
+	var advert AdvertAPI.AdvertInfo
+	var adverts []AdvertAPI.AdvertInfo
+	var result pq.Int64Array
+
+	//tx, err := r.db.Begin()
+	//if err != nil {
+	//	return nil, err
+	//}
+	favQuery := fmt.Sprintf("SELECT fav_list[1:] FROM %s WHERE id=$1", usersTable)
+	favlist := r.db.QueryRow(favQuery, userId)
+	if err := favlist.Scan(&result); err != nil{
+		//tx.Rollback()
+		return nil, err
+	}
+
+	favIds := []int64(result)
+	for _, id := range favIds{
+		query := fmt.Sprintf("SELECT * FROM %s WHERE id = $1", advertsTable)
+		row := r.db.QueryRow(query, id)
+		if err := row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Category, &advert.Location,
+			&advert.PhoneNumber, &advert.Price, &advert.PublishDate, &advert.Views, &advert.ImagesCount); err != nil {
+			return adverts, err
+		}
+		if advert.ImagesCount != 0 {
+			imageQuery := fmt.Sprintf("SELECT * FROM %s WHERE advert_id = $1", advertImages)
+			imageRow, err := r.db.Query(imageQuery, advert.Id)
+			if err != nil {
+				return nil, err
+			}
+			for imageRow.Next(){
+				var image AdvertAPI.AdvertImage
+				if imageRow != nil {
+					if err := imageRow.Scan(&image.Id, &image.Fname, &image.Fsize, &image.Ftype, &image.Path, &image.AdvertId); err != nil {
+						return nil, err
+					}
+				}
+				var res AdvertAPI.ImageUrl
+				url := fmt.Sprintf("http://192.168.1.181:8080/api/advert/image/%d", image.Id)
+				res.URL = url
+				advert.Images = append(advert.Images, res)
+			}
+		}
+		adverts = append(adverts, advert)
+	}
+
+
+	return adverts, nil
+}
+
+func(r *AdvertPostgres) DeleteFav(userId, advertId int) error{
+	var result1 pq.Int64Array
+	id := int64(advertId)
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	favQuery := fmt.Sprintf("SELECT fav_list FROM %s WHERE id=$1", usersTable)
+	favlist := tx.QueryRow(favQuery, userId)
+	if err = favlist.Scan(&result1); err != nil{
+		tx.Rollback()
+		return err
+	}
+	intRes  := []int64(result1)
+	for i, k := range intRes {
+		if id == k {
+			intRes[i] = intRes[len(intRes)-1]
+			intRes[len(intRes)-1] = 0
+			intRes = intRes[:len(intRes)-1]
+		}
+	}
+	inputRes := fmt.Sprintf("UPDATE %s SET fav_list = $1 WHERE id=$2", usersTable)
+	_, err = tx.Exec(inputRes, pq.Array(intRes), userId)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	return tx.Commit()
 }

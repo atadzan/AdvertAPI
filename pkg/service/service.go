@@ -12,12 +12,16 @@ type Advert interface {
 	CountAdverts()(int, error)
 	GetImage(id int)([]AdvertAPI.AdvertImage, error)
 	Delete(id int)error
-	Update(id int, advert AdvertAPI.AdvertInput)error
+	Update(id int, advert AdvertAPI.AdvertInput) error
+	AddFav(userId, advertId int) error
+	GetFav(userId int) ([]AdvertAPI.AdvertInfo, error)
+	DeleteFav(userId, advertId int) error
 }
 
 type Authorization interface {
 	CreateUser(user AdvertAPI.SignUpInput)(int, error)
 	GenerateToken(username, password string)(string, error)
+	ParseToken(token string)(int, error)
 }
 
 type Service struct{

@@ -6,19 +6,22 @@ import (
 )
 
 type Advert interface {
-	Add(advert AdvertAPI.AdvertInput)(int, error)
-	GetAll(advertPerPage, offset int)([]AdvertAPI.AdvertInfo, error)
-	GetById(id int)(AdvertAPI.AdvertInfo, error)
-	CountAdverts()(int, error)
-	AddDB(file AdvertAPI.AdvertImage)(string, error)
-	GetImage(id int)([]AdvertAPI.AdvertImage, error)
-	Delete(id int)error
-	Update(id int, advert AdvertAPI.AdvertInput)error
+	Add(advert AdvertAPI.AdvertInput) (int, error)
+	GetAll(advertPerPage, offset int) ([]AdvertAPI.AdvertInfo, error)
+	GetById(id int) (AdvertAPI.AdvertInfo, error)
+	CountAdverts() (int, error)
+	AddDB(file AdvertAPI.AdvertImage) (string, error)
+	GetImage(id int) ([]AdvertAPI.AdvertImage, error)
+	Delete(id int) error
+	Update(id int, advert AdvertAPI.AdvertInput) error
+	AddFav(userId, advertId int) error
+	GetFav(userId int) ([]AdvertAPI.AdvertInfo, error)
+	DeleteFav(userId, advertId int) error
 }
 
 type Authorization interface {
-	CreateUser(user AdvertAPI.SignUpInput)(int, error)
-	GetUser(username, password string)(AdvertAPI.User, error)
+	CreateUser(user AdvertAPI.SignUpInput) (int, error)
+	GetUser(username, password string) (AdvertAPI.User, error)
 }
 
 type Repository struct {
@@ -26,9 +29,9 @@ type Repository struct {
 	Authorization
 }
 
-func NewRepository(db *sqlx.DB) *Repository{
+func NewRepository(db *sqlx.DB) *Repository {
 	return &Repository{
-		Advert: NewAdvertPostgres(db),
+		Advert:        NewAdvertPostgres(db),
 		Authorization: NewAuthPostgres(db),
 	}
 }
