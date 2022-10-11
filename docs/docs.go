@@ -32,9 +32,9 @@ const docTemplate = `{
                 "operationId": "get_adverts",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Get adverts",
-                        "name": "pageStr",
+                        "type": "string",
+                        "description": "page info",
+                        "name": "page",
                         "in": "query"
                     }
                 ],
@@ -69,9 +69,14 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Add Advert to DB",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
@@ -84,12 +89,37 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "name": "password",
+                        "name": "category",
                         "in": "formData"
                     },
                     {
                         "type": "string",
-                        "name": "username",
+                        "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "location",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "phone_number",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "price",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "name": "title",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "user_id",
                         "in": "formData"
                     }
                 ],
@@ -124,9 +154,6 @@ const docTemplate = `{
         "/api/advert/fav": {
             "get": {
                 "description": "Get User Favourite List",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -135,14 +162,6 @@ const docTemplate = `{
                 ],
                 "summary": "Get User Favourite List",
                 "operationId": "get_fav",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "user",
-                        "name": "default",
-                        "in": "query"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "status",
@@ -271,6 +290,60 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/advert/search": {
+            "get": {
+                "description": "Search Adverts by Title",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "advert"
+                ],
+                "summary": "Search",
+                "operationId": "search_adv",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "title",
+                        "name": "title",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "status",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/AdvertAPI.AdvertInfo"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "error"
+                        }
+                    },
+                    "default": {
+                        "description": "",
+                        "schema": {
+                            "type": "error"
+                        }
+                    }
+                }
+            }
+        },
         "/api/advert/{id}": {
             "get": {
                 "description": "Get Advert by ID",
@@ -298,10 +371,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/AdvertAPI.AdvertInfo"
-                            }
+                            "$ref": "#/definitions/AdvertAPI.AdvertInfo"
                         }
                     },
                     "400": {
@@ -384,7 +454,12 @@ const docTemplate = `{
                         "in": "formData"
                     },
                     {
-                        "type": "string",
+                        "type": "integer",
+                        "name": "user_id",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
                         "name": "views",
                         "in": "formData"
                     }
@@ -468,7 +543,7 @@ const docTemplate = `{
         },
         "/auth/sign-in": {
             "post": {
-                "description": "Login",
+                "description": "Sign in app",
                 "consumes": [
                     "application/json"
                 ],
@@ -478,6 +553,7 @@ const docTemplate = `{
                 "tags": [
                     "auth"
                 ],
+                "summary": "Login",
                 "operationId": "login",
                 "parameters": [
                     {
@@ -520,7 +596,7 @@ const docTemplate = `{
         },
         "/auth/sign-up": {
             "post": {
-                "description": "Create account",
+                "description": "Create account in app",
                 "consumes": [
                     "application/json"
                 ],
@@ -530,7 +606,7 @@ const docTemplate = `{
                 "tags": [
                     "auth"
                 ],
-                "summary": "SignUp",
+                "summary": "Register",
                 "operationId": "create-account",
                 "parameters": [
                     {
@@ -573,6 +649,29 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "AdvertAPI.AdvertImage": {
+            "type": "object",
+            "properties": {
+                "advertId": {
+                    "type": "integer"
+                },
+                "fname": {
+                    "type": "string"
+                },
+                "fsize": {
+                    "type": "integer"
+                },
+                "ftype": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "path": {
+                    "type": "string"
+                }
+            }
+        },
         "AdvertAPI.AdvertInfo": {
             "type": "object",
             "properties": {
@@ -609,8 +708,11 @@ const docTemplate = `{
                 "title": {
                     "type": "string"
                 },
+                "user_id": {
+                    "type": "integer"
+                },
                 "views": {
-                    "type": "string"
+                    "type": "integer"
                 }
             }
         },

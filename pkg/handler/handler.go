@@ -18,7 +18,9 @@ func NewHandler(services *service.Service) *Handler{
 
 func (h *Handler) InitRoutes() *gin.Engine{
 	router := gin.New()
+
 	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	api := router.Group("/api", h.userIdentity)
 	{
 		advert := api.Group("/advert")
@@ -29,6 +31,13 @@ func (h *Handler) InitRoutes() *gin.Engine{
 			advert.PUT("/:id", h.addFavList)
 			advert.GET("fav", h.getFavList)
 			advert.DELETE("fav/:id", h.deleteFav)
+		}
+		comment := api.Group(":id/comment")
+		{
+			comment.POST("/", h.addComment)
+			comment.GET("/", h.getComment)
+			comment.DELETE("/:comment_id", h.delComment)
+			comment.PUT("/:comment_id", h.updComment)
 		}
 	}
 	advert := router.Group("api/advert")

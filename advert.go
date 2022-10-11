@@ -21,7 +21,7 @@ type AdvertInfo struct {
 	Price       int        `json:"price"`
 	PublishDate string     `json:"publish_date"`
 	UserId      int        `json:"user_id"`
-	Views       int     `json:"views"`
+	Views       int        `json:"views"`
 	ImagesCount int        `json:"images_count"`
 	Images      []ImageUrl `json:"images"`
 }
@@ -37,4 +37,15 @@ type AdvertImage struct {
 
 type ImageUrl struct {
 	URL string
+}
+type InputComm struct {
+	Body string `json:"body"`
+}
+type Comment struct {
+	Id        int    `json:"id"`
+	AdvertId  int    `json:"advert_id"`
+	Body      string `json:"body"`
+	UserId    int    `json:"user_id"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
 }

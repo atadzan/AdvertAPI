@@ -351,3 +351,5 @@ func(r *AdvertPostgres) Search(search string)([]AdvertAPI.AdvertInfo, error){
 	}
 	return adverts, nil
 }
+
+

@@ -17,6 +17,14 @@ type Advert interface {
 	GetFav(userId int) ([]AdvertAPI.AdvertInfo, error)
 	DeleteFav(userId, advertId int) error
 	Search(search string)([]AdvertAPI.AdvertInfo, error)
+
+}
+
+type Comment interface {
+	AddCom(comment AdvertAPI.InputComm, userId, advertId int) error
+	GetCom(advertId, userId int)([]AdvertAPI.Comment, error)
+	DelCom(advertId, userId, commentId int) error
+	UpdCom(comment AdvertAPI.InputComm, userId, advertId, commentId int) error
 }
 
 type Authorization interface {
@@ -28,11 +36,13 @@ type Authorization interface {
 type Service struct{
 	Advert
 	Authorization
+	Comment
 }
 
 func NewService(repos *repository.Repository) *Service{
 	return &Service{
 		Advert: NewAdvertService(repos.Advert),
 		Authorization: NewAuthService(repos.Authorization),
+		Comment: NewCommentService(repos.Comment),
 	}
 }

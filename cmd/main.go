@@ -20,7 +20,6 @@ import (
 // @securityDefinitions.apiKey ApiKeyAuth
 // @in                         header
 // @name                       Authorization
-
 func main(){
 	if err := initConfig(); err != nil{
 		log.Fatalf("error initializing configs: %s", err.Error())

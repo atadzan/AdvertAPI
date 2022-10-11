@@ -1,5 +1,20 @@
 basePath: /
 definitions:
+  AdvertAPI.AdvertImage:
+    properties:
+      advertId:
+        type: integer
+      fname:
+        type: string
+      fsize:
+        type: integer
+      ftype:
+        type: string
+      id:
+        type: integer
+      path:
+        type: string
+    type: object
   AdvertAPI.AdvertInfo:
     properties:
       category:
@@ -24,8 +39,10 @@ definitions:
         type: string
       title:
         type: string
+      user_id:
+        type: integer
       views:
-        type: string
+        type: integer
     type: object
   AdvertAPI.ImageUrl:
     properties:
@@ -62,10 +79,10 @@ paths:
       description: Get adverts by page
       operationId: get_adverts
       parameters:
-      - description: Get adverts
+      - description: page info
         in: query
-        name: pageStr
-        type: integer
+        name: page
+        type: string
       produces:
       - application/json
       responses:
@@ -92,16 +109,31 @@ paths:
       - advert
     post:
       consumes:
-      - application/json
+      - multipart/form-data
       description: Add Advert to DB
       operationId: add_advert
       parameters:
       - in: formData
-        name: password
+        name: category
         type: string
       - in: formData
-        name: username
+        name: description
         type: string
+      - in: formData
+        name: location
+        type: string
+      - in: formData
+        name: phone_number
+        type: string
+      - in: formData
+        name: price
+        type: integer
+      - in: formData
+        name: title
+        type: string
+      - in: formData
+        name: user_id
+        type: integer
       produces:
       - application/json
       responses:
@@ -121,6 +153,8 @@ paths:
           description: ""
           schema:
             type: error
+      security:
+      - ApiKeyAuth: []
       summary: Add Advert
       tags:
       - advert
@@ -175,9 +209,7 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/AdvertAPI.AdvertInfo'
-            type: array
+            $ref: '#/definitions/AdvertAPI.AdvertInfo'
         "400":
           description: Bad Request
           schema:
@@ -227,8 +259,11 @@ paths:
         name: title
         type: string
       - in: formData
+        name: user_id
+        type: integer
+      - in: formData
         name: views
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
@@ -253,15 +288,8 @@ paths:
       - advert
   /api/advert/fav:
     get:
-      consumes:
-      - application/json
       description: Get User Favourite List
       operationId: get_fav
-      parameters:
-      - description: user
-        in: query
-        name: default
-        type: string
       produces:
       - application/json
       responses:
@@ -351,11 +379,47 @@ paths:
       summary: Add Advert to Favourite List
       tags:
       - advert
+  /api/advert/search:
+    get:
+      consumes:
+      - application/json
+      description: Search Adverts by Title
+      operationId: search_adv
+      parameters:
+      - description: title
+        in: query
+        name: title
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: status
+          schema:
+            items:
+              $ref: '#/definitions/AdvertAPI.AdvertInfo'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: error
+        "500":
+          description: Internal Server Error
+          schema:
+            type: error
+        default:
+          description: ""
+          schema:
+            type: error
+      summary: Search
+      tags:
+      - advert
   /auth/sign-in:
     post:
       consumes:
       - application/json
-      description: Login
+      description: Sign in app
       operationId: login
       parameters:
       - description: credentials
@@ -383,13 +447,14 @@ paths:
           description: ""
           schema:
             type: error
+      summary: Login
       tags:
       - auth
   /auth/sign-up:
     post:
       consumes:
       - application/json
-      description: Create account
+      description: Create account in app
       operationId: create-account
       parameters:
       - description: account info
@@ -417,7 +482,7 @@ paths:
           description: ""
           schema:
             type: error
-      summary: SignUp
+      summary: Register
       tags:
       - auth
 securityDefinitions:

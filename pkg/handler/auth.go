@@ -6,9 +6,9 @@ import (
 	"net/http"
 )
 
-// @Summary     SignUp
+// @Summary     Register
 // @Tags        auth
-// @Description Create account
+// @Description Create account in app
 // @ID          create-account
 // @Accept      json
 // @Produce     json
@@ -32,9 +32,9 @@ func(h *Handler) signUp(c *gin.Context){
 	c.JSON(http.StatusOK, id)
 }
 
-// @title       SignIn
+// @Summary     Login
 // @Tags        auth
-// @Description Login
+// @Description Sign in app
 // @ID          login
 // @Accept      json
 // @Produce     json

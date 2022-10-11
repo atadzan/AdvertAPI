@@ -12,12 +12,13 @@ import (
 )
 
 // @Summary     Add Advert
+// @Security ApiKeyAuth
 // @Tags        advert
 // @Description Add Advert to DB
 // @ID          add_advert
-// @Accept      json
+// @Accept      mpfd
 // @Produce     json
-// @Param       form    formData AdvertAPI.SignInInput true "credentials"
+// @Param       form   formData AdvertAPI.AdvertInput true "advert info"
 // @Success     200     {string} string                "id"
 // @Failure     400     error    http.StatusBadRequest
 // @Failure     500     error    http.StatusInternalServerError
@@ -104,7 +105,7 @@ func InputProcess(c *gin.Context, form *multipart.Form, userId int) (AdvertAPI.A
 // @ID          get_adverts
 // @Accept      json
 // @Produce     json
-// @Param       page    query   int false "Get adverts"
+//@Param       page    query   string false "page info"
 // @Success     200     {array} AdvertAPI.AdvertInfo
 // @Failure     400     error   http.StatusBadRequest
 // @Failure     500     error   http.StatusInternalServerError
@@ -147,7 +148,7 @@ func (h *Handler) getAdverts(c *gin.Context) {
 // @Accept      json
 // @Produce     json
 // @Param       id      path    int true "advert ID"
-// @Success     200     {array} AdvertAPI.AdvertInfo
+// @Success     200     {object} AdvertAPI.AdvertInfo
 // @Failure     400     error   http.StatusBadRequest
 // @Failure     500     error   http.StatusInternalServerError
 // @Failure     default error   http.StatusBadRequest
@@ -223,7 +224,7 @@ func (h *Handler) deleteAdvert(c *gin.Context) {
 // @ID          update_advert
 // @Accept      json
 // @Produce     json
-// @Param       form    formData AdvertAPI.AdvertInfo true "credentials"
+// @Param       form    formData AdvertAPI.AdvertInfo true "update advert info"
 // @Success     200     {string} string               "status"
 // @Failure     400     error    http.StatusBadRequest
 // @Failure     500     error    http.StatusInternalServerError
@@ -292,9 +293,7 @@ func (h *Handler) addFavList(c *gin.Context) {
 // @Tags        advert
 // @Description Get User Favourite List
 // @ID          get_fav
-// @Accept      json
 // @Produce     json
-// @Param       default query    string false "user"
 // @Success     200     {string} string "status"
 // @Failure     400     error    http.StatusBadRequest
 // @Failure     500     error    http.StatusInternalServerError
@@ -342,9 +341,20 @@ func (h *Handler) deleteFav(c *gin.Context) {
 	c.JSON(http.StatusOK, nil)
 }
 
+// @Summary     Search
+// @Tags        advert
+// @Description Search Adverts by Title
+// @ID          search_adv
+// @Accept      json
+// @Produce     json
+// @Param       title   query   string               true "title"
+// @Success     200     {array} AdvertAPI.AdvertInfo "status"
+// @Failure     400     error   http.StatusBadRequest
+// @Failure     500     error   http.StatusInternalServerError
+// @Failure     default error   http.StatusBadRequest
+// @Router      /api/advert/search [get]
 func(h *Handler) searchTitle(c *gin.Context){
 	title := c.DefaultQuery("title", "Advert")
-	//search := c.Param("search")
 	var adverts []AdvertAPI.AdvertInfo
 	adverts, err := h.services.Advert.Search(title)
 	if err != nil {
@@ -353,3 +363,4 @@ func(h *Handler) searchTitle(c *gin.Context){
 	}
 	c.JSON(http.StatusOK, adverts)
 }
+

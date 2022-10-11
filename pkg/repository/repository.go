@@ -17,7 +17,14 @@ type Advert interface {
 	AddFav(userId, advertId int) error
 	GetFav(userId int) ([]AdvertAPI.AdvertInfo, error)
 	DeleteFav(userId, advertId int) error
-	Search(search string)([]AdvertAPI.AdvertInfo, error)
+	Search(search string) ([]AdvertAPI.AdvertInfo, error)
+}
+
+type Comment interface {
+	AddCom(comment AdvertAPI.InputComm, userId, advertId int) error
+	GetCom(advertId, userId int) ([]AdvertAPI.Comment, error)
+	DelCom(advertId, userId, commentId int) error
+	UpdCom(comment AdvertAPI.InputComm, userId, advertId, commentId int) error
 }
 
 type Authorization interface {
@@ -28,11 +35,13 @@ type Authorization interface {
 type Repository struct {
 	Advert
 	Authorization
+	Comment
 }
 
 func NewRepository(db *sqlx.DB) *Repository {
 	return &Repository{
 		Advert:        NewAdvertPostgres(db),
 		Authorization: NewAuthPostgres(db),
+		Comment:       NewCommentPostgres(db),
 	}
 }
