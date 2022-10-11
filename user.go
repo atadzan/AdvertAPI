@@ -17,7 +17,6 @@ type User struct {
 	Password string `json:"password"`
 	PhoneNumber string `json:"phone_number"`
 	CreatedAt string `json:"created_at"`
-	//UpdatedAt string `json:"updated_at"`
 	FavList string`json:"fav_list"`
 }
 

@@ -25,9 +25,9 @@ func(r *AdvertPostgres) Add(advert AdvertAPI.AdvertInput)(int, error){
 	}
 	var id int
 	createAdvertQuery := fmt.Sprintf("INSERT INTO %s (title, description, category, location, phone_number," +
-		" price, publish_date) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id", advertsTable)
+		" price, publish_date, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id", advertsTable)
 	row := tx.QueryRow(createAdvertQuery, advert.Title, advert.Description, advert.Category, advert.Location,
-		advert.PhoneNumber, advert.Price, time.Now())
+		advert.PhoneNumber, advert.Price, time.Now(), advert.UserId)
 	if err := row.Scan(&id); err != nil{
 		err = tx.Rollback()
 		return 0, err
@@ -63,7 +63,7 @@ func(r *AdvertPostgres) GetAll(advertPerPage, offset int)([]AdvertAPI.AdvertInfo
 	for row.Next(){
 		var advert AdvertAPI.AdvertInfo
 		if err := row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Category, &advert.Location,
-			&advert.PhoneNumber, &advert.Price, &advert.PublishDate, &advert.Views, &advert.ImagesCount); err != nil{
+			&advert.PhoneNumber, &advert.Price, &advert.PublishDate, &advert.Views, &advert.ImagesCount, &advert.UserId); err != nil{
 			return adverts, err
 		}
 		if advert.ImagesCount != 0 {
@@ -96,14 +96,13 @@ func(r *AdvertPostgres) GetById(id int)(AdvertAPI.AdvertInfo, error){
 	query := fmt.Sprintf("SELECT * FROM %s WHERE id = $1", advertsTable)
 	row := tx.QueryRow(query, id)
 	err = row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Category, &advert.Location,
-		&advert.PhoneNumber, &advert.Price, &advert.PublishDate, &advert.Views, &advert.ImagesCount)
-	i, err := strconv.Atoi(advert.Views)
+		&advert.PhoneNumber, &advert.Price, &advert.PublishDate, &advert.Views, &advert.ImagesCount, &advert.UserId)
 	if err != nil {
 		return advert, err
 	}
-	i += 1
+	advert.Views += 1
 	updateQuery := fmt.Sprintf("UPDATE %s SET views = $1 WHERE id = $2", advertsTable)
-	_, err = tx.Exec(updateQuery, i, id)
+	_, err = tx.Exec(updateQuery, advert.Views, id)
 	if err != nil {
 		tx.Rollback()
 		return advert, err
@@ -224,8 +223,8 @@ func(r *AdvertPostgres) Update(id int, advert AdvertAPI.AdvertInput) error{
 		}
 	}
 	setQuery := strings.Join(setValues, ", ")
-	query := fmt.Sprintf("UPDATE %s SET %s,  publish_date = $%d WHERE id = $%d", advertsTable, setQuery, argId, argId+1)
-	args = append(args, time.Now(), id)
+	query := fmt.Sprintf("UPDATE %s SET %s,  publish_date = $%d, user_id=$%d WHERE id = $%d", advertsTable, setQuery, argId, argId+1, argId+2)
+	args = append(args, time.Now(),advert. UserId, id)
 	_, err := r.db.Exec(query, args...)
 	return err
 }
@@ -239,15 +238,11 @@ func(r *AdvertPostgres) AddFav(userId, advertId int) error{
 	}
 	return nil
 }
+
 func(r *AdvertPostgres) GetFav(userId int)([]AdvertAPI.AdvertInfo, error) {
-	var advert AdvertAPI.AdvertInfo
 	var adverts []AdvertAPI.AdvertInfo
 	var result pq.Int64Array
 
-	//tx, err := r.db.Begin()
-	//if err != nil {
-	//	return nil, err
-	//}
 	favQuery := fmt.Sprintf("SELECT fav_list[1:] FROM %s WHERE id=$1", usersTable)
 	favlist := r.db.QueryRow(favQuery, userId)
 	if err := favlist.Scan(&result); err != nil{
@@ -256,7 +251,9 @@ func(r *AdvertPostgres) GetFav(userId int)([]AdvertAPI.AdvertInfo, error) {
 	}
 
 	favIds := []int64(result)
+
 	for _, id := range favIds{
+		var advert AdvertAPI.AdvertInfo
 		query := fmt.Sprintf("SELECT * FROM %s WHERE id = $1", advertsTable)
 		row := r.db.QueryRow(query, id)
 		if err := row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Category, &advert.Location,
@@ -265,7 +262,7 @@ func(r *AdvertPostgres) GetFav(userId int)([]AdvertAPI.AdvertInfo, error) {
 		}
 		if advert.ImagesCount != 0 {
 			imageQuery := fmt.Sprintf("SELECT * FROM %s WHERE advert_id = $1", advertImages)
-			imageRow, err := r.db.Query(imageQuery, advert.Id)
+			imageRow, err := r.db.Query(imageQuery, id)
 			if err != nil {
 				return nil, err
 			}
@@ -281,11 +278,10 @@ func(r *AdvertPostgres) GetFav(userId int)([]AdvertAPI.AdvertInfo, error) {
 				res.URL = url
 				advert.Images = append(advert.Images, res)
 			}
+
 		}
 		adverts = append(adverts, advert)
 	}
-
-
 	return adverts, nil
 }
 

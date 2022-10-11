@@ -10,6 +10,17 @@ import (
 	"log"
 )
 
+// @title       Advert App API
+// @version     1.0
+// @description API Server for Advert Application
+
+// @host     localhost:8080
+// @BasePath /
+
+// @securityDefinitions.apiKey ApiKeyAuth
+// @in                         header
+// @name                       Authorization
+
 func main(){
 	if err := initConfig(); err != nil{
 		log.Fatalf("error initializing configs: %s", err.Error())

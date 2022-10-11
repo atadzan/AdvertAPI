@@ -7,20 +7,22 @@ type AdvertInput struct {
 	Location    string        `json:"location"`
 	PhoneNumber string        `json:"phone_number"`
 	Price       int           `json:"price"`
+	UserId      int           `json:"user_id"`
 	Images      []AdvertImage `json:"images"`
 }
 
 type AdvertInfo struct {
-	Id          int           `json:"id"`
-	Title       string        `json:"title"`
-	Description string        `json:"description"`
-	Category    string        `json:"category"`
-	Location    string        `json:"location"`
-	PhoneNumber string        `json:"phone_number"`
-	Price       int           `json:"price"`
-	PublishDate string        `json:"publish_date"`
-	Views       string        `json:"views"`
-	ImagesCount int           `json:"images_count"`
+	Id          int        `json:"id"`
+	Title       string     `json:"title"`
+	Description string     `json:"description"`
+	Category    string     `json:"category"`
+	Location    string     `json:"location"`
+	PhoneNumber string     `json:"phone_number"`
+	Price       int        `json:"price"`
+	PublishDate string     `json:"publish_date"`
+	UserId      int        `json:"user_id"`
+	Views       int     `json:"views"`
+	ImagesCount int        `json:"images_count"`
 	Images      []ImageUrl `json:"images"`
 }
 
@@ -36,4 +38,3 @@ type AdvertImage struct {
 type ImageUrl struct {
 	URL string
 }
-
