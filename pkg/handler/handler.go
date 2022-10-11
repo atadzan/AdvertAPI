@@ -36,6 +36,7 @@ func (h *Handler) InitRoutes() *gin.Engine{
 		advert.GET("/", h.getAdverts)
 		advert.GET("/:id", h.getAdvertById)
 		advert.GET("/image/:id", h.getImage)
+		advert.GET("/search", h.searchTitle)
 	}
 	auth := router.Group("/auth")
 	{

@@ -314,3 +314,40 @@ func(r *AdvertPostgres) DeleteFav(userId, advertId int) error{
 	}
 	return tx.Commit()
 }
+
+func(r *AdvertPostgres) Search(search string)([]AdvertAPI.AdvertInfo, error){
+	var adverts []AdvertAPI.AdvertInfo
+	query := fmt.Sprintf("SELECT * FROM %s AS a WHERE a.title LIKE $1 ORDER BY a.publish_date DESC", advertsTable)
+	row, err := r.db.Query(query, "%" + search + "%")
+	if err != nil {
+		return nil, err
+	}
+	for row.Next(){
+		var advert AdvertAPI.AdvertInfo
+		if err := row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Category, &advert.Location,
+			&advert.PhoneNumber, &advert.Price, &advert.PublishDate, &advert.Views, &advert.ImagesCount, &advert.UserId); err != nil{
+			return nil, err
+		}
+		if advert.ImagesCount != 0 {
+			imageQuery := fmt.Sprintf("SELECT * FROM %s WHERE advert_id = $1", advertImages)
+			imageRow, err := r.db.Query(imageQuery, advert.Id)
+			if err != nil {
+				return nil, err
+			}
+			for imageRow.Next(){
+				var image AdvertAPI.AdvertImage
+				if imageRow != nil {
+					if err := imageRow.Scan(&image.Id, &image.Fname, &image.Fsize, &image.Ftype, &image.Path, &image.AdvertId); err != nil {
+						return nil, err
+					}
+				}
+				var res AdvertAPI.ImageUrl
+				url := fmt.Sprintf("http://192.168.1.181:8080/api/advert/image/%d", image.Id)
+				res.URL = url
+				advert.Images = append(advert.Images, res)
+			}
+		}
+		adverts = append(adverts, advert)
+	}
+	return adverts, nil
+}

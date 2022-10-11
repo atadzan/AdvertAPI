@@ -16,6 +16,7 @@ type Advert interface {
 	AddFav(userId, advertId int) error
 	GetFav(userId int) ([]AdvertAPI.AdvertInfo, error)
 	DeleteFav(userId, advertId int) error
+	Search(search string)([]AdvertAPI.AdvertInfo, error)
 }
 
 type Authorization interface {

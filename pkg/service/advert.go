@@ -52,3 +52,7 @@ func(s *AdvertService) GetFav(userId int)([]AdvertAPI.AdvertInfo, error){
 func(s *AdvertService) DeleteFav(userId, advertId int) error{
 	return s.repo.DeleteFav(userId, advertId)
 }
+
+func(s *AdvertService) Search(search string)([]AdvertAPI.AdvertInfo, error){
+	return s.repo.Search(search)
+}

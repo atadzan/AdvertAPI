@@ -341,3 +341,15 @@ func (h *Handler) deleteFav(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, nil)
 }
+
+func(h *Handler) searchTitle(c *gin.Context){
+	title := c.DefaultQuery("title", "Advert")
+	//search := c.Param("search")
+	var adverts []AdvertAPI.AdvertInfo
+	adverts, err := h.services.Advert.Search(title)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, adverts)
+}
