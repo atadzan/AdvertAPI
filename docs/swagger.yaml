@@ -1,0 +1,493 @@
+basePath: /
+definitions:
+  AdvertAPI.AdvertImage:
+    properties:
+      advertId:
+        type: integer
+      fname:
+        type: string
+      fsize:
+        type: integer
+      ftype:
+        type: string
+      id:
+        type: integer
+      path:
+        type: string
+    type: object
+  AdvertAPI.AdvertInfo:
+    properties:
+      category:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      images:
+        items:
+          $ref: '#/definitions/AdvertAPI.ImageUrl'
+        type: array
+      images_count:
+        type: integer
+      location:
+        type: string
+      phone_number:
+        type: string
+      price:
+        type: integer
+      publish_date:
+        type: string
+      title:
+        type: string
+      user_id:
+        type: integer
+      views:
+        type: integer
+    type: object
+  AdvertAPI.ImageUrl:
+    properties:
+      url:
+        type: string
+    type: object
+  AdvertAPI.SignInInput:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  AdvertAPI.SignUpInput:
+    properties:
+      password:
+        type: string
+      phone_number:
+        type: string
+      username:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API Server for Advert Application
+  title: Advert App API
+  version: "1.0"
+paths:
+  /api/advert:
+    get:
+      consumes:
+      - application/json
+      description: Get adverts by page
+      operationId: get_adverts
+      parameters:
+      - description: page info
+        in: query
+        name: page
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/AdvertAPI.AdvertInfo'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: error
+        "500":
+          description: Internal Server Error
+          schema:
+            type: error
+        default:
+          description: ""
+          schema:
+            type: error
+      summary: Get Adverts
+      tags:
+      - advert
+    post:
+      consumes:
+      - multipart/form-data
+      description: Add Advert to DB
+      operationId: add_advert
+      parameters:
+      - in: formData
+        name: category
+        type: string
+      - in: formData
+        name: description
+        type: string
+      - in: formData
+        name: location
+        type: string
+      - in: formData
+        name: phone_number
+        type: string
+      - in: formData
+        name: price
+        type: integer
+      - in: formData
+        name: title
+        type: string
+      - in: formData
+        name: user_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: id
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: error
+        "500":
+          description: Internal Server Error
+          schema:
+            type: error
+        default:
+          description: ""
+          schema:
+            type: error
+      security:
+      - ApiKeyAuth: []
+      summary: Add Advert
+      tags:
+      - advert
+  /api/advert/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Advert
+      operationId: del_advert
+      parameters:
+      - description: advert ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: status
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: error
+        "500":
+          description: Internal Server Error
+          schema:
+            type: error
+        default:
+          description: ""
+          schema:
+            type: error
+      summary: Delete Advert
+      tags:
+      - advert
+    get:
+      consumes:
+      - application/json
+      description: Get Advert by ID
+      operationId: get_advert
+      parameters:
+      - description: advert ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/AdvertAPI.AdvertInfo'
+        "400":
+          description: Bad Request
+          schema:
+            type: error
+        "500":
+          description: Internal Server Error
+          schema:
+            type: error
+        default:
+          description: ""
+          schema:
+            type: error
+      summary: Get Advert by ID
+      tags:
+      - advert
+    put:
+      consumes:
+      - application/json
+      description: Update Advert
+      operationId: update_advert
+      parameters:
+      - in: formData
+        name: category
+        type: string
+      - in: formData
+        name: description
+        type: string
+      - in: formData
+        name: id
+        type: integer
+      - in: formData
+        name: images_count
+        type: integer
+      - in: formData
+        name: location
+        type: string
+      - in: formData
+        name: phone_number
+        type: string
+      - in: formData
+        name: price
+        type: integer
+      - in: formData
+        name: publish_date
+        type: string
+      - in: formData
+        name: title
+        type: string
+      - in: formData
+        name: user_id
+        type: integer
+      - in: formData
+        name: views
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: status
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: error
+        "500":
+          description: Internal Server Error
+          schema:
+            type: error
+        default:
+          description: ""
+          schema:
+            type: error
+      summary: Update Advert
+      tags:
+      - advert
+  /api/advert/fav:
+    get:
+      description: Get User Favourite List
+      operationId: get_fav
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: status
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: error
+        "500":
+          description: Internal Server Error
+          schema:
+            type: error
+        default:
+          description: ""
+          schema:
+            type: error
+      summary: Get User Favourite List
+      tags:
+      - advert
+  /api/advert/fav/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Advert from Favourite List
+      operationId: del_fav
+      parameters:
+      - description: advert
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: status
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: error
+        "500":
+          description: Internal Server Error
+          schema:
+            type: error
+        default:
+          description: ""
+          schema:
+            type: error
+      summary: Delete Advert from Favourite List
+      tags:
+      - advert
+    post:
+      consumes:
+      - application/json
+      description: Add Advert to Favourite List
+      operationId: add_fav
+      parameters:
+      - description: credentials
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: status
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: error
+        "500":
+          description: Internal Server Error
+          schema:
+            type: error
+        default:
+          description: ""
+          schema:
+            type: error
+      summary: Add Advert to Favourite List
+      tags:
+      - advert
+  /api/advert/search:
+    get:
+      consumes:
+      - application/json
+      description: Search Adverts by Title
+      operationId: search_adv
+      parameters:
+      - description: title
+        in: query
+        name: title
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: status
+          schema:
+            items:
+              $ref: '#/definitions/AdvertAPI.AdvertInfo'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: error
+        "500":
+          description: Internal Server Error
+          schema:
+            type: error
+        default:
+          description: ""
+          schema:
+            type: error
+      summary: Search
+      tags:
+      - advert
+  /auth/sign-in:
+    post:
+      consumes:
+      - application/json
+      description: Sign in app
+      operationId: login
+      parameters:
+      - description: credentials
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/AdvertAPI.SignInInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: token
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: error
+        "500":
+          description: Internal Server Error
+          schema:
+            type: error
+        default:
+          description: ""
+          schema:
+            type: error
+      summary: Login
+      tags:
+      - auth
+  /auth/sign-up:
+    post:
+      consumes:
+      - application/json
+      description: Create account in app
+      operationId: create-account
+      parameters:
+      - description: account info
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/AdvertAPI.SignUpInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+        "400":
+          description: Bad Request
+          schema:
+            type: error
+        "500":
+          description: Internal Server Error
+          schema:
+            type: error
+        default:
+          description: ""
+          schema:
+            type: error
+      summary: Register
+      tags:
+      - auth
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

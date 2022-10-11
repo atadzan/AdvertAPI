@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/atadzan/AdvertAPI"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -23,9 +25,9 @@ func(r *AdvertPostgres) Add(advert AdvertAPI.AdvertInput)(int, error){
 	}
 	var id int
 	createAdvertQuery := fmt.Sprintf("INSERT INTO %s (title, description, category, location, phone_number," +
-		" price, publish_date) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id", advertsTable)
+		" price, publish_date, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id", advertsTable)
 	row := tx.QueryRow(createAdvertQuery, advert.Title, advert.Description, advert.Category, advert.Location,
-		advert.PhoneNumber, advert.Price, time.Now())
+		advert.PhoneNumber, advert.Price, time.Now(), advert.UserId)
 	if err := row.Scan(&id); err != nil{
 		err = tx.Rollback()
 		return 0, err
@@ -61,7 +63,7 @@ func(r *AdvertPostgres) GetAll(advertPerPage, offset int)([]AdvertAPI.AdvertInfo
 	for row.Next(){
 		var advert AdvertAPI.AdvertInfo
 		if err := row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Category, &advert.Location,
-			&advert.PhoneNumber, &advert.Price, &advert.PublishDate, &advert.Views, &advert.ImagesCount); err != nil{
+			&advert.PhoneNumber, &advert.Price, &advert.PublishDate, &advert.Views, &advert.ImagesCount, &advert.UserId); err != nil{
 			return adverts, err
 		}
 		if advert.ImagesCount != 0 {
@@ -78,7 +80,7 @@ func(r *AdvertPostgres) GetAll(advertPerPage, offset int)([]AdvertAPI.AdvertInfo
 					}
 				}
 				var res AdvertAPI.ImageUrl
-				url := fmt.Sprintf("http://192.168.1.181:8080/advert/image/%d", image.Id)
+				url := fmt.Sprintf("http://192.168.1.181:8080/api/advert/image/%d", image.Id)
 				res.URL = url
 				advert.Images = append(advert.Images, res)
 			}
@@ -90,14 +92,26 @@ func(r *AdvertPostgres) GetAll(advertPerPage, offset int)([]AdvertAPI.AdvertInfo
 
 func(r *AdvertPostgres) GetById(id int)(AdvertAPI.AdvertInfo, error){
 	var advert AdvertAPI.AdvertInfo
+	tx, err := r.db.Begin()
 	query := fmt.Sprintf("SELECT * FROM %s WHERE id = $1", advertsTable)
-	row := r.db.QueryRow(query, id)
-	err := row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Category, &advert.Location,
-		&advert.PhoneNumber, &advert.Price, &advert.PublishDate, &advert.Views, &advert.ImagesCount)
+	row := tx.QueryRow(query, id)
+	err = row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Category, &advert.Location,
+		&advert.PhoneNumber, &advert.Price, &advert.PublishDate, &advert.Views, &advert.ImagesCount, &advert.UserId)
+	if err != nil {
+		return advert, err
+	}
+	advert.Views += 1
+	updateQuery := fmt.Sprintf("UPDATE %s SET views = $1 WHERE id = $2", advertsTable)
+	_, err = tx.Exec(updateQuery, advert.Views, id)
+	if err != nil {
+		tx.Rollback()
+		return advert, err
+	}
 	if advert.ImagesCount != 0 {
 		imageQuery := fmt.Sprintf("SELECT * FROM %s WHERE advert_id = $1", advertImages)
-		imageRow, err := r.db.Query(imageQuery, advert.Id)
+		imageRow, err := tx.Query(imageQuery, advert.Id)
 		if err != nil {
+			tx.Rollback()
 			return advert, err
 		}
 		for imageRow.Next(){
@@ -108,12 +122,13 @@ func(r *AdvertPostgres) GetById(id int)(AdvertAPI.AdvertInfo, error){
 				}
 			}
 			var res AdvertAPI.ImageUrl
-			url := fmt.Sprintf("http://192.168.1.181:8080/advert/image/%d", image.Id)
+			url := fmt.Sprintf("http://192.168.1.181:8080/api/advert/image/%d", image.Id)
 			res.URL = url
 			advert.Images = append(advert.Images, res)
 		}
 	}
-	return advert, err
+
+	return advert, tx.Commit()
 }
 
 func(r *AdvertPostgres) CountAdverts()(int, error){
@@ -163,7 +178,7 @@ func(r *AdvertPostgres) Delete(id int)error{
 	return err
 }
 
-func(r *AdvertPostgres) Update(id int, advert AdvertAPI.AdvertInput)error{
+func(r *AdvertPostgres) Update(id int, advert AdvertAPI.AdvertInput) error{
 	setValues := make([]string, 0)
 	args := make([]interface{}, 0)
 	argId := 1
@@ -206,11 +221,135 @@ func(r *AdvertPostgres) Update(id int, advert AdvertAPI.AdvertInput)error{
 				return err
 			}
 		}
-
 	}
 	setQuery := strings.Join(setValues, ", ")
-	query := fmt.Sprintf("UPDATE %s SET %s,  publish_date = $%d WHERE id = $%d", advertsTable, setQuery, argId, argId+1)
-	args = append(args, time.Now(), id)
+	query := fmt.Sprintf("UPDATE %s SET %s,  publish_date = $%d, user_id=$%d WHERE id = $%d", advertsTable, setQuery, argId, argId+1, argId+2)
+	args = append(args, time.Now(),advert. UserId, id)
 	_, err := r.db.Exec(query, args...)
 	return err
 }
+
+func(r *AdvertPostgres) AddFav(userId, advertId int) error{
+	id := strconv.Itoa(advertId)
+	query := fmt.Sprintf("UPDATE %s SET fav_list = array_append(fav_list, $1) WHERE id = $2", usersTable)
+	_, err := r.db.Exec(query, id, userId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func(r *AdvertPostgres) GetFav(userId int)([]AdvertAPI.AdvertInfo, error) {
+	var adverts []AdvertAPI.AdvertInfo
+	var result pq.Int64Array
+
+	favQuery := fmt.Sprintf("SELECT fav_list[1:] FROM %s WHERE id=$1", usersTable)
+	favlist := r.db.QueryRow(favQuery, userId)
+	if err := favlist.Scan(&result); err != nil{
+		//tx.Rollback()
+		return nil, err
+	}
+
+	favIds := []int64(result)
+
+	for _, id := range favIds{
+		var advert AdvertAPI.AdvertInfo
+		query := fmt.Sprintf("SELECT * FROM %s WHERE id = $1", advertsTable)
+		row := r.db.QueryRow(query, id)
+		if err := row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Category, &advert.Location,
+			&advert.PhoneNumber, &advert.Price, &advert.PublishDate, &advert.Views, &advert.ImagesCount); err != nil {
+			return adverts, err
+		}
+		if advert.ImagesCount != 0 {
+			imageQuery := fmt.Sprintf("SELECT * FROM %s WHERE advert_id = $1", advertImages)
+			imageRow, err := r.db.Query(imageQuery, id)
+			if err != nil {
+				return nil, err
+			}
+			for imageRow.Next(){
+				var image AdvertAPI.AdvertImage
+				if imageRow != nil {
+					if err := imageRow.Scan(&image.Id, &image.Fname, &image.Fsize, &image.Ftype, &image.Path, &image.AdvertId); err != nil {
+						return nil, err
+					}
+				}
+				var res AdvertAPI.ImageUrl
+				url := fmt.Sprintf("http://192.168.1.181:8080/api/advert/image/%d", image.Id)
+				res.URL = url
+				advert.Images = append(advert.Images, res)
+			}
+
+		}
+		adverts = append(adverts, advert)
+	}
+	return adverts, nil
+}
+
+func(r *AdvertPostgres) DeleteFav(userId, advertId int) error{
+	var result1 pq.Int64Array
+	id := int64(advertId)
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	favQuery := fmt.Sprintf("SELECT fav_list FROM %s WHERE id=$1", usersTable)
+	favlist := tx.QueryRow(favQuery, userId)
+	if err = favlist.Scan(&result1); err != nil{
+		tx.Rollback()
+		return err
+	}
+	intRes  := []int64(result1)
+	for i, k := range intRes {
+		if id == k {
+			intRes[i] = intRes[len(intRes)-1]
+			intRes[len(intRes)-1] = 0
+			intRes = intRes[:len(intRes)-1]
+		}
+	}
+	inputRes := fmt.Sprintf("UPDATE %s SET fav_list = $1 WHERE id=$2", usersTable)
+	_, err = tx.Exec(inputRes, pq.Array(intRes), userId)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	return tx.Commit()
+}
+
+func(r *AdvertPostgres) Search(search string)([]AdvertAPI.AdvertInfo, error){
+	var adverts []AdvertAPI.AdvertInfo
+	query := fmt.Sprintf("SELECT * FROM %s AS a WHERE a.title LIKE $1 ORDER BY a.publish_date DESC", advertsTable)
+	row, err := r.db.Query(query, "%" + search + "%")
+	if err != nil {
+		return nil, err
+	}
+	for row.Next(){
+		var advert AdvertAPI.AdvertInfo
+		if err := row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Category, &advert.Location,
+			&advert.PhoneNumber, &advert.Price, &advert.PublishDate, &advert.Views, &advert.ImagesCount, &advert.UserId); err != nil{
+			return nil, err
+		}
+		if advert.ImagesCount != 0 {
+			imageQuery := fmt.Sprintf("SELECT * FROM %s WHERE advert_id = $1", advertImages)
+			imageRow, err := r.db.Query(imageQuery, advert.Id)
+			if err != nil {
+				return nil, err
+			}
+			for imageRow.Next(){
+				var image AdvertAPI.AdvertImage
+				if imageRow != nil {
+					if err := imageRow.Scan(&image.Id, &image.Fname, &image.Fsize, &image.Ftype, &image.Path, &image.AdvertId); err != nil {
+						return nil, err
+					}
+				}
+				var res AdvertAPI.ImageUrl
+				url := fmt.Sprintf("http://192.168.1.181:8080/api/advert/image/%d", image.Id)
+				res.URL = url
+				advert.Images = append(advert.Images, res)
+			}
+		}
+		adverts = append(adverts, advert)
+	}
+	return adverts, nil
+}
+
+
