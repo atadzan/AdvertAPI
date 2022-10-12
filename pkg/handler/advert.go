@@ -12,13 +12,13 @@ import (
 )
 
 // @Summary     Add Advert
-// @Security ApiKeyAuth
+// @Security    ApiKeyAuth
 // @Tags        advert
 // @Description Add Advert to DB
 // @ID          add_advert
 // @Accept      mpfd
 // @Produce     json
-// @Param       form   formData AdvertAPI.AdvertInput true "advert info"
+// @Param       form    formData AdvertAPI.AdvertInput true "advert info"
 // @Success     200     {string} string                "id"
 // @Failure     400     error    http.StatusBadRequest
 // @Failure     500     error    http.StatusInternalServerError
@@ -147,11 +147,11 @@ func (h *Handler) getAdverts(c *gin.Context) {
 // @ID          get_advert
 // @Accept      json
 // @Produce     json
-// @Param       id      path    int true "advert ID"
+// @Param       id      path     int true "advert ID"
 // @Success     200     {object} AdvertAPI.AdvertInfo
-// @Failure     400     error   http.StatusBadRequest
-// @Failure     500     error   http.StatusInternalServerError
-// @Failure     default error   http.StatusBadRequest
+// @Failure     400     error    http.StatusBadRequest
+// @Failure     500     error    http.StatusInternalServerError
+// @Failure     default error    http.StatusBadRequest
 // @Router      /api/advert/{id} [get]
 func (h *Handler) getAdvertById(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
@@ -167,30 +167,8 @@ func (h *Handler) getAdvertById(c *gin.Context) {
 	c.JSON(http.StatusOK, advert)
 }
 
-func (h *Handler) getImage(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
-	object, err := h.services.Advert.GetImage(id)
-	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, "Invalid id param")
-		return
-	}
-	for _, i := range object {
-		fi, err := os.Open(i.Path)
-		if err != nil {
-			newErrorResponse(c, http.StatusInternalServerError, err.Error())
-			return
-		}
-		_, err = io.Copy(c.Writer, fi)
-		if err != nil {
-			newErrorResponse(c, http.StatusInternalServerError, err.Error())
-			return
-		}
-		return
-	}
-	return
-}
-
 // @Summary     Delete Advert
+// @Security    ApiKeyAuth
 // @Tags        advert
 // @Description Delete Advert
 // @ID          del_advert
@@ -219,6 +197,7 @@ func (h *Handler) deleteAdvert(c *gin.Context) {
 }
 
 // @Summary     Update Advert
+// @Security    ApiKeyAuth
 // @Tags        advert
 // @Description Update Advert
 // @ID          update_advert
@@ -261,6 +240,7 @@ func (h *Handler) updateAdvert(c *gin.Context) {
 }
 
 // @Summary     Add Advert to Favourite List
+// @Security    ApiKeyAuth
 // @Tags        advert
 // @Description Add Advert to Favourite List
 // @ID          add_fav
@@ -290,6 +270,7 @@ func (h *Handler) addFavList(c *gin.Context) {
 }
 
 // @Summary     Get User Favourite List
+// @Security    ApiKeyAuth
 // @Tags        advert
 // @Description Get User Favourite List
 // @ID          get_fav
@@ -313,6 +294,7 @@ func (h *Handler) getFavList(c *gin.Context) {
 }
 
 // @Summary     Delete Advert from Favourite List
+// @Security    ApiKeyAuth
 // @Tags        advert
 // @Description Delete Advert from Favourite List
 // @ID          del_fav
@@ -355,7 +337,6 @@ func (h *Handler) deleteFav(c *gin.Context) {
 // @Router      /api/advert/search [get]
 func(h *Handler) searchTitle(c *gin.Context){
 	title := c.DefaultQuery("title", "Advert")
-	var adverts []AdvertAPI.AdvertInfo
 	adverts, err := h.services.Advert.Search(title)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
@@ -363,4 +344,3 @@ func(h *Handler) searchTitle(c *gin.Context){
 	}
 	c.JSON(http.StatusOK, adverts)
 }
-

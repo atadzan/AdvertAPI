@@ -35,7 +35,6 @@ func (h *Handler) InitRoutes() *gin.Engine{
 		comment := api.Group(":id/comment")
 		{
 			comment.POST("/", h.addComment)
-			comment.GET("/", h.getComment)
 			comment.DELETE("/:comment_id", h.delComment)
 			comment.PUT("/:comment_id", h.updComment)
 		}
@@ -44,7 +43,6 @@ func (h *Handler) InitRoutes() *gin.Engine{
 	{
 		advert.GET("/", h.getAdverts)
 		advert.GET("/:id", h.getAdvertById)
-		advert.GET("/image/:id", h.getImage)
 		advert.GET("/search", h.searchTitle)
 	}
 	auth := router.Group("/auth")
