@@ -24,24 +24,6 @@ func(r *CommentPostgres)AddCom(comment AdvertAPI.InputComm, userId, advertId int
 	return nil
 }
 
-func(r *CommentPostgres)GetCom(advertId, userId int)([]AdvertAPI.Comment, error){
-	var comments []AdvertAPI.Comment
-	query := fmt.Sprintf("SELECT * FROM %s WHERE advert_id=$1 AND user_id=$2", commentsTable)
-	rows, err := r.db.Query(query, advertId, userId)
-	if err != nil {
-		return nil, err
-	}
-	for rows.Next(){
-		var comment AdvertAPI.Comment
-		if err = rows.Scan(&comment.Id, &comment.AdvertId, &comment.Body, &comment.UserId, &comment.CreatedAt,
-			&comment.UpdatedAt); err != nil {
-			return nil, err
-		}
-		comments = append(comments, comment)
-	}
-	return comments, err
-}
-
 func(r *CommentPostgres) DelCom(advertId, userId, commentId int) error{
 	query := fmt.Sprintf("DELETE FROM %s WHERE id=$1 AND advert_id=$2 AND user_id=$3", commentsTable)
 	_, err := r.db.Exec(query, commentId, advertId, userId)

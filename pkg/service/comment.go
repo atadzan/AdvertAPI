@@ -17,10 +17,6 @@ func(s *CommentService) AddCom(comment AdvertAPI.InputComm, userId, advertId int
 	return s.repo.AddCom(comment, userId, advertId)
 }
 
-func(s *CommentService) GetCom(advertId, userId int)([]AdvertAPI.Comment, error){
-	return s.repo.GetCom(advertId, userId)
-}
-
 func(s *CommentService) DelCom(advertId, userId, commentId int) error{
 	return s.repo.DelCom(advertId, userId, commentId)
 }

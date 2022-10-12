@@ -19,6 +19,12 @@ definitions:
     properties:
       category:
         type: string
+      comment_count:
+        type: integer
+      comments:
+        items:
+          $ref: '#/definitions/AdvertAPI.Comment'
+        type: array
       description:
         type: string
       id:
@@ -42,6 +48,21 @@ definitions:
       user_id:
         type: integer
       views:
+        type: integer
+    type: object
+  AdvertAPI.Comment:
+    properties:
+      advert_id:
+        type: integer
+      body:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      updated_at:
+        type: string
+      user_id:
         type: integer
     type: object
   AdvertAPI.ImageUrl:
@@ -72,6 +93,42 @@ info:
   title: Advert App API
   version: "1.0"
 paths:
+  /api/{id}/comment:
+    post:
+      consumes:
+      - application/json
+      description: Add Comment to Advert
+      operationId: add_comment
+      parameters:
+      - description: advert id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: id
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: error
+        "500":
+          description: Internal Server Error
+          schema:
+            type: error
+        default:
+          description: ""
+          schema:
+            type: error
+      security:
+      - ApiKeyAuth: []
+      summary: Add Comment
+      tags:
+      - comment
   /api/advert:
     get:
       consumes:
@@ -189,6 +246,8 @@ paths:
           description: ""
           schema:
             type: error
+      security:
+      - ApiKeyAuth: []
       summary: Delete Advert
       tags:
       - advert
@@ -234,6 +293,9 @@ paths:
       - in: formData
         name: category
         type: string
+      - in: formData
+        name: comment_count
+        type: integer
       - in: formData
         name: description
         type: string
@@ -283,9 +345,82 @@ paths:
           description: ""
           schema:
             type: error
+      security:
+      - ApiKeyAuth: []
       summary: Update Advert
       tags:
       - advert
+  /api/advert/{id}/comment/{comment_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Advert Comment by ID
+      operationId: delete_comment
+      parameters:
+      - description: advert ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: error
+        "500":
+          description: Internal Server Error
+          schema:
+            type: error
+        default:
+          description: ""
+          schema:
+            type: error
+      security:
+      - ApiKeyAuth: []
+      summary: Delete Comment
+      tags:
+      - comment
+    put:
+      consumes:
+      - application/json
+      description: Update Advert Comment By ID
+      operationId: update comment
+      parameters:
+      - description: advert ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: error
+        "500":
+          description: Internal Server Error
+          schema:
+            type: error
+        default:
+          description: ""
+          schema:
+            type: error
+      security:
+      - ApiKeyAuth: []
+      summary: Update Comment
+      tags:
+      - comment
   /api/advert/fav:
     get:
       description: Get User Favourite List
@@ -309,6 +444,8 @@ paths:
           description: ""
           schema:
             type: error
+      security:
+      - ApiKeyAuth: []
       summary: Get User Favourite List
       tags:
       - advert
@@ -343,6 +480,8 @@ paths:
           description: ""
           schema:
             type: error
+      security:
+      - ApiKeyAuth: []
       summary: Delete Advert from Favourite List
       tags:
       - advert
@@ -376,6 +515,8 @@ paths:
           description: ""
           schema:
             type: error
+      security:
+      - ApiKeyAuth: []
       summary: Add Advert to Favourite List
       tags:
       - advert

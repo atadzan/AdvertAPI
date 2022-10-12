@@ -153,6 +153,11 @@ const docTemplate = `{
         },
         "/api/advert/fav": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Get User Favourite List",
                 "produces": [
                     "application/json"
@@ -192,6 +197,11 @@ const docTemplate = `{
         },
         "/api/advert/fav/{id}": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Add Advert to Favourite List",
                 "consumes": [
                     "application/json"
@@ -241,6 +251,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Delete Advert from Favourite List",
                 "consumes": [
                     "application/json"
@@ -395,6 +410,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Update Advert",
                 "consumes": [
                     "application/json"
@@ -411,6 +431,11 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "name": "category",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "comment_count",
                         "in": "formData"
                     },
                     {
@@ -492,6 +517,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Delete Advert",
                 "consumes": [
                     "application/json"
@@ -516,6 +546,172 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "status",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "error"
+                        }
+                    },
+                    "default": {
+                        "description": "",
+                        "schema": {
+                            "type": "error"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/advert/{id}/comment/{comment_id}": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update Advert Comment By ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "comment"
+                ],
+                "summary": "Update Comment",
+                "operationId": "update comment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "advert ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "error"
+                        }
+                    },
+                    "default": {
+                        "description": "",
+                        "schema": {
+                            "type": "error"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete Advert Comment by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "comment"
+                ],
+                "summary": "Delete Comment",
+                "operationId": "delete_comment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "advert ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "error"
+                        }
+                    },
+                    "default": {
+                        "description": "",
+                        "schema": {
+                            "type": "error"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/{id}/comment": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Add Comment to Advert",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "comment"
+                ],
+                "summary": "Add Comment",
+                "operationId": "add_comment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "advert id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "id",
                         "schema": {
                             "type": "string"
                         }
@@ -678,6 +874,15 @@ const docTemplate = `{
                 "category": {
                     "type": "string"
                 },
+                "comment_count": {
+                    "type": "integer"
+                },
+                "comments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AdvertAPI.Comment"
+                    }
+                },
                 "description": {
                     "type": "string"
                 },
@@ -712,6 +917,29 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "views": {
+                    "type": "integer"
+                }
+            }
+        },
+        "AdvertAPI.Comment": {
+            "type": "object",
+            "properties": {
+                "advert_id": {
+                    "type": "integer"
+                },
+                "body": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
                     "type": "integer"
                 }
             }

@@ -22,7 +22,6 @@ type Advert interface {
 
 type Comment interface {
 	AddCom(comment AdvertAPI.InputComm, userId, advertId int) error
-	GetCom(advertId, userId int) ([]AdvertAPI.Comment, error)
 	DelCom(advertId, userId, commentId int) error
 	UpdCom(comment AdvertAPI.InputComm, userId, advertId, commentId int) error
 }
