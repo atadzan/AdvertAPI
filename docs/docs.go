@@ -955,10 +955,10 @@ const docTemplate = `{
         "AdvertAPI.SignInInput": {
             "type": "object",
             "properties": {
-                "password": {
+                 "username": {
                     "type": "string"
                 },
-                "username": {
+				"password": {
                     "type": "string"
                 }
             }
@@ -966,13 +966,13 @@ const docTemplate = `{
         "AdvertAPI.SignUpInput": {
             "type": "object",
             "properties": {
+               	 "username": {
+                    "type": "string"
+                },
                 "password": {
                     "type": "string"
                 },
                 "phone_number": {
-                    "type": "string"
-                },
-                "username": {
                     "type": "string"
                 }
             }

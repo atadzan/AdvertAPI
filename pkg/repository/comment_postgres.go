@@ -34,8 +34,8 @@ func(r *CommentPostgres) DelCom(advertId, userId, commentId int) error{
 }
 
 func(r *CommentPostgres) UpdCom(comment AdvertAPI.InputComm, userId, advertId, commentId int) error{
-	query := fmt.Sprintf("UPDATE %s SET body=$1, updated_at=$2", commentsTable)
-	_, err := r.db.Exec(query, comment.Body, time.Now())
+	query := fmt.Sprintf("UPDATE %s SET body=$1, updated_at=$2 WHERE id=$3 AND advert_id=$4 AND user_id=$5", commentsTable)
+	_, err := r.db.Exec(query, comment.Body, time.Now(), commentId, advertId, userId)
 	if err != nil {
 		return err
 	}

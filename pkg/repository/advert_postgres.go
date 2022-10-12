@@ -118,20 +118,20 @@ func (r *AdvertPostgres) GetById(id int) (AdvertAPI.AdvertInfo, error) {
 	updateQuery := fmt.Sprintf("UPDATE %s SET views = $1 WHERE id = $2", advertsTable)
 	_, err = tx.Exec(updateQuery, advert.Views, id)
 	if err != nil {
-		tx.Rollback()
+		err = tx.Rollback()
 		return advert, err
 	}
 	if advert.ImagesCount != 0 {
 		imageQuery := fmt.Sprintf("SELECT * FROM %s WHERE advert_id = $1", advertImages)
-		imageRow, err := tx.Query(imageQuery, advert.Id)
-		if err != nil {
-			tx.Rollback()
-			return advert, err
+		imageRow, ok := tx.Query(imageQuery, advert.Id)
+		if ok != nil {
+			ok = tx.Rollback()
+			return advert, ok
 		}
 		for imageRow.Next() {
 			var image AdvertAPI.AdvertImage
 			if imageRow != nil {
-				if err := imageRow.Scan(&image.Id, &image.Fname, &image.Fsize, &image.Ftype, &image.Path, &image.AdvertId); err != nil {
+				if err = imageRow.Scan(&image.Id, &image.Fname, &image.Fsize, &image.Ftype, &image.Path, &image.AdvertId); err != nil {
 					return advert, err
 				}
 			}
@@ -143,14 +143,14 @@ func (r *AdvertPostgres) GetById(id int) (AdvertAPI.AdvertInfo, error) {
 	}
 	if advert.CommentCount != 0 {
 		commentQuery := fmt.Sprintf("SELECT * from %s WHERE advert_id=$1", commentsTable)
-		rows, err := tx.Query(commentQuery, advert.Id)
-		if err != nil {
-			tx.Rollback()
-			return advert, err
+		rows, err2 := tx.Query(commentQuery, advert.Id)
+		if err2 != nil {
+			err2 = tx.Rollback()
+			return advert, err2
 		}
 		for rows.Next() {
 			var comment AdvertAPI.Comment
-			if err := rows.Scan(&comment.Id, &comment.AdvertId, &comment.Body, &comment.UserId, &comment.CreatedAt, &comment.UpdatedAt); err != nil {
+			if err = rows.Scan(&comment.Id, &comment.AdvertId, &comment.Body, &comment.UserId, &comment.CreatedAt, &comment.UpdatedAt); err != nil {
 				return advert, err
 			}
 			advert.Comments = append(advert.Comments, comment)
@@ -336,7 +336,7 @@ func (r *AdvertPostgres) DeleteFav(userId, advertId int) error {
 	favQuery := fmt.Sprintf("SELECT fav_list FROM %s WHERE id=$1", usersTable)
 	favlist := tx.QueryRow(favQuery, userId)
 	if err = favlist.Scan(&result1); err != nil {
-		tx.Rollback()
+		 err = tx.Rollback()
 		return err
 	}
 	intRes := []int64(result1)
@@ -350,7 +350,7 @@ func (r *AdvertPostgres) DeleteFav(userId, advertId int) error {
 	inputRes := fmt.Sprintf("UPDATE %s SET fav_list = $1 WHERE id=$2", usersTable)
 	_, err = tx.Exec(inputRes, pq.Array(intRes), userId)
 	if err != nil {
-		tx.Rollback()
+		err = tx.Rollback()
 		return err
 	}
 	return tx.Commit()
@@ -366,21 +366,20 @@ func (r *AdvertPostgres) Search(search string) ([]AdvertAPI.AdvertInfo, error) {
 	}
 	for row.Next() {
 		var advert AdvertAPI.AdvertInfo
-		if err := row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Category, &advert.Location,
+		if err = row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Category, &advert.Location,
 			&advert.PhoneNumber, &advert.Price, &advert.PublishDate, &advert.Views, &advert.ImagesCount, &advert.UserId, &advert.CommentCount); err != nil {
 			return nil, err
 		}
 		if advert.ImagesCount != 0 {
 			imageQuery := fmt.Sprintf("SELECT * FROM %s WHERE advert_id = $1", advertImages)
-			imageRow, err := r.db.Query(imageQuery, advert.Id)
-			if err != nil {
-				//tx.Rollback()
+			imageRow, err1 := r.db.Query(imageQuery, advert.Id)
+			if err1 != nil {
 				return nil, err
 			}
 			for imageRow.Next() {
 				var image AdvertAPI.AdvertImage
 				if imageRow != nil {
-					if err := imageRow.Scan(&image.Id, &image.Fname, &image.Fsize, &image.Ftype, &image.Path, &image.AdvertId); err != nil {
+					if err = imageRow.Scan(&image.Id, &image.Fname, &image.Fsize, &image.Ftype, &image.Path, &image.AdvertId); err != nil {
 						return nil, err
 					}
 				}
@@ -392,14 +391,13 @@ func (r *AdvertPostgres) Search(search string) ([]AdvertAPI.AdvertInfo, error) {
 		}
 		if advert.CommentCount != 0 {
 			commentQuery := fmt.Sprintf("SELECT * from %s WHERE advert_id=$1", commentsTable)
-			rows, err := r.db.Query(commentQuery, advert.Id)
-			if err != nil {
-				//tx.Rollback()
-				return adverts, err
+			rows, err2 := r.db.Query(commentQuery, advert.Id)
+			if err2 != nil {
+				return adverts, err2
 			}
 			for rows.Next() {
 				var comment AdvertAPI.Comment
-				if err := rows.Scan(&comment.Id, &comment.AdvertId, &comment.Body, &comment.UserId, &comment.CreatedAt, &comment.UpdatedAt); err != nil {
+				if err = rows.Scan(&comment.Id, &comment.AdvertId, &comment.Body, &comment.UserId, &comment.CreatedAt, &comment.UpdatedAt); err != nil {
 					return adverts, err
 				}
 				advert.Comments = append(advert.Comments, comment)

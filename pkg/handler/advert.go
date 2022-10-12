@@ -70,6 +70,7 @@ func InputProcess(c *gin.Context, form *multipart.Form, userId int) (AdvertAPI.A
 			file.Fname = images[i].Filename
 			file.Fsize = images[i].Size
 			file.Ftype = images[i].Header.Get("Content-type")
+
 			//	Create file
 			tempFile, err := os.CreateTemp("assets/uploadImages", "*.jpg")
 			if err != nil {
