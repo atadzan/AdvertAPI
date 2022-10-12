@@ -266,7 +266,7 @@ func (h *Handler) addFavList(c *gin.Context) {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, nil)
+	c.JSON(http.StatusOK, "Successfully added")
 }
 
 // @Summary     Get User Favourite List
@@ -320,7 +320,7 @@ func (h *Handler) deleteFav(c *gin.Context) {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, nil)
+	c.JSON(http.StatusOK, "Successfully deleted")
 }
 
 // @Summary     Search
