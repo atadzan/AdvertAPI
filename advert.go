@@ -3,7 +3,7 @@ package AdvertAPI
 type AdvertInput struct {
 	Title       string        `json:"title"`
 	Description string        `json:"description"`
-	Category    string        `json:"category"`
+	Category    int           `json:"category"`
 	Location    string        `json:"location"`
 	PhoneNumber string        `json:"phone_number"`
 	Price       int           `json:"price"`
@@ -15,7 +15,7 @@ type AdvertInfo struct {
 	Id           int        `json:"id"`
 	Title        string     `json:"title"`
 	Description  string     `json:"description"`
-	Category     string     `json:"category"`
+	Category     int        `json:"category"`
 	Location     string     `json:"location"`
 	PhoneNumber  string     `json:"phone_number"`
 	Price        int        `json:"price"`
@@ -40,9 +40,11 @@ type AdvertImage struct {
 type ImageUrl struct {
 	URL string
 }
+
 type InputComm struct {
 	Body string `json:"body"`
 }
+
 type Comment struct {
 	Id        int    `json:"id"`
 	AdvertId  int    `json:"advert_id"`

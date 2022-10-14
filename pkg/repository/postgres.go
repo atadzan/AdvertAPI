@@ -10,6 +10,7 @@ const (
 	advertImages = "images"
 	usersTable = "users"
 	commentsTable = "comments"
+	categoriesTable = "categories"
 )
 
 type Config struct{

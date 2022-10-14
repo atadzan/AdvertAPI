@@ -9,6 +9,7 @@ type Advert interface {
 	Add(advert AdvertAPI.AdvertInput) (int, error)
 	GetAll(advertPerPage, offset int) ([]AdvertAPI.AdvertInfo, error)
 	GetById(id int) (AdvertAPI.AdvertInfo, error)
+	GetImage(id int) ([]AdvertAPI.AdvertImage, error)
 	CountAdverts() (int, error)
 	Delete(id int) error
 	Update(id int, advert AdvertAPI.AdvertInput) error
@@ -24,6 +25,12 @@ type Comment interface {
 	UpdCom(comment AdvertAPI.InputComm, userId, advertId, commentId int) error
 }
 
+type Category interface {
+	Add(category AdvertAPI.CategoryInput) (int, error)
+	GetMain()([]AdvertAPI.CategoryOutput, error)
+	GetNested(categoryId int)([]AdvertAPI.CategoryOutput, error)
+}
+
 type Authorization interface {
 	CreateUser(user AdvertAPI.SignUpInput) (int, error)
 	GenerateToken(username, password string) (string, error)
@@ -34,6 +41,7 @@ type Service struct {
 	Advert
 	Authorization
 	Comment
+	Category
 }
 
 func NewService(repos *repository.Repository) *Service {
@@ -41,5 +49,6 @@ func NewService(repos *repository.Repository) *Service {
 		Advert:        NewAdvertService(repos.Advert),
 		Authorization: NewAuthService(repos.Authorization),
 		Comment:       NewCommentService(repos.Comment),
+		Category:      NewCategoryService(repos.Category),
 	}
 }

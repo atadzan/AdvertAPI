@@ -52,7 +52,7 @@ func InputProcess(c *gin.Context, form *multipart.Form, userId int) (AdvertAPI.A
 	var advert AdvertAPI.AdvertInput
 	advert.Title = c.PostForm("title")
 	advert.Description = c.PostForm("description")
-	advert.Category = c.PostForm("category")
+	advert.Category, _ = strconv.Atoi(c.PostForm("category"))
 	advert.Location = c.PostForm("location")
 	advert.PhoneNumber = c.PostForm("phone_number")
 	advert.Price, _ = strconv.Atoi(c.PostForm("price"))
@@ -166,6 +166,29 @@ func (h *Handler) getAdvertById(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, advert)
+}
+
+func(h *Handler) getImage(c *gin.Context){
+	id, err := strconv.Atoi(c.Param("id"))
+	object, err := h.services.Advert.GetImage(id)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, "Invalid id param")
+		return
+	}
+	for _, i := range object{
+		fi, err := os.Open(i.Path)
+		if err != nil {
+			newErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+		_, err = io.Copy(c.Writer, fi)
+		if err != nil {
+			newErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+		return
+	}
+	return
 }
 
 // @Summary     Delete Advert

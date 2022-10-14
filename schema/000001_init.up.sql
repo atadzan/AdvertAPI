@@ -30,3 +30,11 @@ CREATE TABLE users
     updated_at timestamp(0),
     fav_list int[]
 );
+
+CREATE TABLE categories
+(
+    id serial primary key not null,
+    title varchar(255),
+    main boolean not null default false,
+    parent_id int
+)

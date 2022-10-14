@@ -121,7 +121,12 @@ const docTemplate = `{
                         "type": "integer",
                         "name": "user_id",
                         "in": "formData"
-                    }
+                    },
+					{
+						"type": "file",
+						"name": "images",
+						"in": "formData"
+					}
                 ],
                 "responses": {
                     "200": {

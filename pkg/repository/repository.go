@@ -26,6 +26,12 @@ type Comment interface {
 	UpdCom(comment AdvertAPI.InputComm, userId, advertId, commentId int) error
 }
 
+type Category interface {
+	Add(category AdvertAPI.CategoryInput) (int, error)
+	GetMain()([]AdvertAPI.CategoryOutput, error)
+	GetNested(categoryId int)([]AdvertAPI.CategoryOutput, error)
+}
+
 type Authorization interface {
 	CreateUser(user AdvertAPI.SignUpInput) (int, error)
 	GetUser(username, password string) (AdvertAPI.User, error)
@@ -35,6 +41,7 @@ type Repository struct {
 	Advert
 	Authorization
 	Comment
+	Category
 }
 
 func NewRepository(db *sqlx.DB) *Repository {
@@ -42,5 +49,6 @@ func NewRepository(db *sqlx.DB) *Repository {
 		Advert:        NewAdvertPostgres(db),
 		Authorization: NewAuthPostgres(db),
 		Comment:       NewCommentPostgres(db),
+		Category:      NewCategoryPostgres(db),
 	}
 }
