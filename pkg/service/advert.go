@@ -17,11 +17,11 @@ func(s *AdvertService) Add(advert AdvertAPI.AdvertInput)(int, error){
 	return s.repo.Add(advert)
 }
 
-func(s *AdvertService) GetAll(advertPerPage, offset int)([]AdvertAPI.AdvertInfo, error){
+func(s *AdvertService) GetAll(advertPerPage, offset int)([]AdvertAPI.AdvertOutput, error){
 	return s.repo.GetAll(advertPerPage, offset)
 }
 
-func(s *AdvertService) GetById(id int)(AdvertAPI.AdvertInfo, error){
+func(s *AdvertService) GetById(id int)(AdvertAPI.AdvertOutput, error){
 	return s.repo.GetById(id)
 }
 
@@ -45,7 +45,7 @@ func(s *AdvertService) AddFav(userId, advertId int) error{
 	return s.repo.AddFav(userId, advertId)
 }
 
-func(s *AdvertService) GetFav(userId int)([]AdvertAPI.AdvertInfo, error){
+func(s *AdvertService) GetFav(userId int)([]AdvertAPI.AdvertOutput, error){
 	return s.repo.GetFav(userId)
 }
 
@@ -53,6 +53,10 @@ func(s *AdvertService) DeleteFav(userId, advertId int) error{
 	return s.repo.DeleteFav(userId, advertId)
 }
 
-func(s *AdvertService) Search(search string)([]AdvertAPI.AdvertInfo, error){
+func(s *AdvertService) CheckFavList(userId, advertId int)(bool, error){
+	return s.repo.CheckFavList(userId, advertId)
+}
+
+func(s *AdvertService) Search(search string)([]AdvertAPI.AdvertOutput, error){
 	return s.repo.Search(search)
 }

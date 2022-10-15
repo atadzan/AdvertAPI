@@ -53,15 +53,15 @@ func (r *AdvertPostgres) Add(advert AdvertAPI.AdvertInput) (int, error) {
 	return id, tx.Commit()
 }
 
-func (r *AdvertPostgres) GetAll(advertPerPage, offset int) ([]AdvertAPI.AdvertInfo, error) {
-	var adverts []AdvertAPI.AdvertInfo
+func (r *AdvertPostgres) GetAll(advertPerPage, offset int) ([]AdvertAPI.AdvertOutput, error) {
+	var adverts []AdvertAPI.AdvertOutput
 	query := fmt.Sprintf("SELECT * FROM %s ORDER BY publish_date DESC LIMIT $1 OFFSET $2", advertsTable)
 	row, ok := r.db.Query(query, advertPerPage, offset)
 	if ok != nil {
 		return nil, ok
 	}
 	for row.Next() {
-		var advert AdvertAPI.AdvertInfo
+		var advert AdvertAPI.AdvertOutput
 		if err := row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Location,
 			&advert.PhoneNumber, &advert.Price, &advert.PublishDate, &advert.Views, &advert.ImagesCount, &advert.UserId, &advert.CommentCount, &advert.Category); err != nil {
 			return adverts, err
@@ -104,8 +104,8 @@ func (r *AdvertPostgres) GetAll(advertPerPage, offset int) ([]AdvertAPI.AdvertIn
 	return adverts, nil
 }
 
-func (r *AdvertPostgres) GetById(id int) (AdvertAPI.AdvertInfo, error) {
-	var advert AdvertAPI.AdvertInfo
+func (r *AdvertPostgres) GetById(id int) (AdvertAPI.AdvertOutput, error) {
+	var advert AdvertAPI.AdvertOutput
 	tx, err := r.db.Begin()
 	query := fmt.Sprintf("SELECT * FROM %s WHERE id = $1", advertsTable)
 	row := tx.QueryRow(query, id)
@@ -267,21 +267,18 @@ func (r *AdvertPostgres) AddFav(userId, advertId int) error {
 	return nil
 }
 
-func (r *AdvertPostgres) GetFav(userId int) ([]AdvertAPI.AdvertInfo, error) {
-	var adverts []AdvertAPI.AdvertInfo
+func (r *AdvertPostgres) GetFav(userId int) ([]AdvertAPI.AdvertOutput, error) {
+	var adverts []AdvertAPI.AdvertOutput
 	var result pq.Int64Array
-
 	favQuery := fmt.Sprintf("SELECT fav_list[1:] FROM %s WHERE id=$1", usersTable)
 	favlist := r.db.QueryRow(favQuery, userId)
 	if err := favlist.Scan(&result); err != nil {
 		fmt.Println("Error in favlist")
 		return nil, err
 	}
-
 	favIds := []int64(result)
-
 	for _, id := range favIds {
-		var advert AdvertAPI.AdvertInfo
+		var advert AdvertAPI.AdvertOutput
 		query := fmt.Sprintf("SELECT * FROM %s WHERE id = $1", advertsTable)
 		row := r.db.QueryRow(query, id)
 		if err := row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Location, &advert.PhoneNumber,
@@ -316,9 +313,9 @@ func (r *AdvertPostgres) GetFav(userId int) ([]AdvertAPI.AdvertInfo, error) {
 			}
 			for rows.Next() {
 				var comment AdvertAPI.Comment
-				if err := rows.Scan(&comment.Id, &comment.AdvertId, &comment.Body, &comment.UserId, &comment.CreatedAt,
-					&comment.UpdatedAt); err != nil {
-					return adverts, err
+				if ok := rows.Scan(&comment.Id, &comment.AdvertId, &comment.Body, &comment.UserId, &comment.CreatedAt,
+					&comment.UpdatedAt); ok != nil {
+					return adverts, ok
 				}
 				advert.Comments = append(advert.Comments, comment)
 			}
@@ -358,16 +355,38 @@ func (r *AdvertPostgres) DeleteFav(userId, advertId int) error {
 	return tx.Commit()
 }
 
-func (r *AdvertPostgres) Search(search string) ([]AdvertAPI.AdvertInfo, error) {
-	var adverts []AdvertAPI.AdvertInfo
+func(r *AdvertPostgres) CheckFavList(userId, advertId int)(bool, error){
+	var response bool
+	var result pq.Int64Array
+
+	favQuery := fmt.Sprintf("SELECT fav_list[1:] FROM %s WHERE id=$1", usersTable)
+	favlist := r.db.QueryRow(favQuery, userId)
+	if err := favlist.Scan(&result); err != nil {
+		fmt.Println("Error in favlist")
+		return response, err
+	}
+	favIds := []int64(result)
+	id := int64(advertId)
+	for _, v := range favIds {
+		if  id == v  {
+			response = true
+		}else{
+			response = false
+		}
+	}
+	return response, nil
+}
+
+func (r *AdvertPostgres) Search(search string) ([]AdvertAPI.AdvertOutput, error) {
+	var adverts []AdvertAPI.AdvertOutput
 	query := fmt.Sprintf("SELECT * FROM %s AS a WHERE a.title LIKE $1 ORDER BY a.publish_date DESC", advertsTable)
 	row, err := r.db.Query(query, "%"+search+"%")
 	if err != nil {
-
-		return nil, err
+		return adverts, err
 	}
+
 	for row.Next() {
-		var advert AdvertAPI.AdvertInfo
+		var advert AdvertAPI.AdvertOutput
 		if err = row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Location, &advert.PhoneNumber,
 			&advert.Price, &advert.PublishDate, &advert.Views, &advert.ImagesCount, &advert.UserId, &advert.CommentCount,
 			&advert.Category); err != nil {
@@ -407,6 +426,10 @@ func (r *AdvertPostgres) Search(search string) ([]AdvertAPI.AdvertInfo, error) {
 			}
 		}
 		adverts = append(adverts, advert)
+	}
+	if adverts == nil{
+		emptyAdverts := []AdvertAPI.AdvertOutput{}
+		adverts = emptyAdverts
 	}
 	return adverts, nil
 }

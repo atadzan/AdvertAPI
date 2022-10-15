@@ -347,6 +347,37 @@ func (h *Handler) deleteFav(c *gin.Context) {
 	c.JSON(http.StatusOK, "Successfully deleted")
 }
 
+// @Summary     Check Favourite List
+// @Security    ApiKeyAuth
+// @Tags        fav_list
+// @Description Check Advert from Favourite List
+// @ID          fav_list
+// @Accept      json
+// @Produce     json
+// @Param       id      path     int    true "advert"
+// @Success     200     {bool} bool "status"
+// @Failure     400     error    http.StatusBadRequest
+// @Failure     500     error    http.StatusInternalServerError
+// @Failure     default error    http.StatusBadRequest
+// @Router      /api/advert/fav/{id} [get]
+func(h *Handler) checkFav(c *gin.Context){
+	userId, err := getUserId(c)
+	if err != nil {
+		return
+	}
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	response, ok := h.services.Advert.CheckFavList(userId, id)
+	if ok != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, response)
+}
+
 // @Summary     Search
 // @Tags        advert
 // @Description Search Adverts by Title
@@ -359,7 +390,7 @@ func (h *Handler) deleteFav(c *gin.Context) {
 // @Failure     500     error   http.StatusInternalServerError
 // @Failure     default error   http.StatusBadRequest
 // @Router      /api/advert/search [get]
-func(h *Handler) searchTitle(c *gin.Context){
+func(h *Handler) searchByTitle(c *gin.Context){
 	title := c.DefaultQuery("title", "Advert")
 	adverts, err := h.services.Advert.Search(title)
 	if err != nil {

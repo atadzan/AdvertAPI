@@ -11,7 +11,7 @@ type AdvertInput struct {
 	Images      []AdvertImage `json:"images"`
 }
 
-type AdvertInfo struct {
+type AdvertOutput struct {
 	Id           int        `json:"id"`
 	Title        string     `json:"title"`
 	Description  string     `json:"description"`

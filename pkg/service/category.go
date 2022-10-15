@@ -24,3 +24,7 @@ func(s *CategoryService) GetMain()([]AdvertAPI.CategoryOutput, error){
 func(s *CategoryService) GetNested(categoryId int)([]AdvertAPI.CategoryOutput, error){
 	return s.repo.GetNested(categoryId)
 }
+
+func(s *CategoryService) GetCategoryAdverts(categoryId int)([]AdvertAPI.AdvertOutput, error){
+	return s.repo.GetCategoryAdverts(categoryId)
+}

@@ -7,29 +7,32 @@ import (
 
 type Advert interface {
 	Add(advert AdvertAPI.AdvertInput) (int, error)
-	GetAll(advertPerPage, offset int) ([]AdvertAPI.AdvertInfo, error)
-	GetById(id int) (AdvertAPI.AdvertInfo, error)
+	GetAll(advertPerPage, offset int) ([]AdvertAPI.AdvertOutput, error)
+	GetById(id int) (AdvertAPI.AdvertOutput, error)
 	CountAdverts() (int, error)
 	AddDB(file AdvertAPI.AdvertImage) (string, error)
 	GetImage(id int) ([]AdvertAPI.AdvertImage, error)
 	Delete(id int) error
 	Update(id int, advert AdvertAPI.AdvertInput) error
 	AddFav(userId, advertId int) error
-	GetFav(userId int) ([]AdvertAPI.AdvertInfo, error)
+	GetFav(userId int) ([]AdvertAPI.AdvertOutput, error)
 	DeleteFav(userId, advertId int) error
-	Search(search string) ([]AdvertAPI.AdvertInfo, error)
+	CheckFavList(userId, advertId int)(bool, error)
+	Search(search string) ([]AdvertAPI.AdvertOutput, error)
 }
 
 type Comment interface {
 	AddCom(comment AdvertAPI.InputComm, userId, advertId int) error
 	DelCom(advertId, userId, commentId int) error
 	UpdCom(comment AdvertAPI.InputComm, userId, advertId, commentId int) error
+
 }
 
 type Category interface {
 	Add(category AdvertAPI.CategoryInput) (int, error)
 	GetMain()([]AdvertAPI.CategoryOutput, error)
 	GetNested(categoryId int)([]AdvertAPI.CategoryOutput, error)
+	GetCategoryAdverts(categoryId int)([]AdvertAPI.AdvertOutput, error)
 }
 
 type Authorization interface {

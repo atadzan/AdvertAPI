@@ -9,12 +9,8 @@ import (
 
 
 func(h *Handler) addCategory(c *gin.Context){
-	_, err := getUserId(c)
-	if err != nil {
-		return
-	}
 	var categoryInput AdvertAPI.CategoryInput
-	if err = c.BindJSON(&categoryInput); err != nil {
+	if err := c.BindJSON(&categoryInput); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -47,4 +43,18 @@ func(h *Handler) getNestedCategories(c *gin.Context){
 		return
 	}
 	c.JSON(http.StatusOK, nestedCategories)
+}
+
+func(h *Handler) getCategoryAdverts(c *gin.Context){
+	categoryId, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, "invalid category id param")
+		return
+	}
+	categoryAdverts, ok := h.services.Category.GetCategoryAdverts(categoryId)
+	if ok != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, categoryAdverts)
 }
