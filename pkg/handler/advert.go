@@ -70,7 +70,6 @@ func InputProcess(c *gin.Context, form *multipart.Form, userId int) (AdvertAPI.A
 			file.Fname = images[i].Filename
 			file.Fsize = images[i].Size
 			file.Ftype = images[i].Header.Get("Content-type")
-
 			//	Create file
 			tempFile, err := os.CreateTemp("assets/uploadImages", "*.jpg")
 			if err != nil {
@@ -79,21 +78,18 @@ func InputProcess(c *gin.Context, form *multipart.Form, userId int) (AdvertAPI.A
 			}
 			filepath := tempFile.Name()
 			file.Path = filepath
-
 			//read all the contents of our uploaded file into a byte array
 			fileBytes, err := io.ReadAll(image)
 			if err != nil {
 				newErrorResponse(c, http.StatusInternalServerError, err.Error())
 				return advert, err
 			}
-
 			//Write this byte array to our temporary array
 			_, err = tempFile.Write(fileBytes)
 			if err != nil {
 				newErrorResponse(c, http.StatusInternalServerError, err.Error())
 				return advert, err
 			}
-
 			advert.Images = append(advert.Images, file)
 		}
 	}
@@ -124,7 +120,7 @@ func (h *Handler) getAdverts(c *gin.Context) {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	const advertPerPage = 5
+	const advertPerPage = 10
 	pageCount := int(math.Ceil(float64(advertCount) / float64(advertPerPage)))
 	if pageCount == 0 {
 		pageCount = 1
@@ -134,9 +130,9 @@ func (h *Handler) getAdverts(c *gin.Context) {
 		return
 	}
 	offset := (page - 1) * advertPerPage
-	adverts, err := h.services.Advert.GetAll(advertPerPage, offset)
-	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+	adverts, ok := h.services.Advert.GetAll(advertPerPage, offset)
+	if ok != nil {
+		newErrorResponse(c, http.StatusInternalServerError, ok.Error())
 		return
 	}
 	c.JSON(http.StatusOK, adverts)
@@ -170,15 +166,19 @@ func (h *Handler) getAdvertById(c *gin.Context) {
 
 func(h *Handler) getImage(c *gin.Context){
 	id, err := strconv.Atoi(c.Param("id"))
-	object, err := h.services.Advert.GetImage(id)
-	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, "Invalid id param")
+	if err != nil{
+		newErrorResponse(c, http.StatusBadRequest, "invalid id param")
+		return
+	}
+	object, ok := h.services.Advert.GetImage(id)
+	if ok != nil {
+		newErrorResponse(c, http.StatusInternalServerError, ok.Error())
 		return
 	}
 	for _, i := range object{
-		fi, err := os.Open(i.Path)
-		if err != nil {
-			newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		fi, err1 := os.Open(i.Path)
+		if err1 != nil {
+			newErrorResponse(c, http.StatusInternalServerError, err1.Error())
 			return
 		}
 		_, err = io.Copy(c.Writer, fi)

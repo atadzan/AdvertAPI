@@ -64,7 +64,7 @@ func(r *CategoryPostgres) GetCategoryAdverts(categoryId int)([]AdvertAPI.AdvertO
 	if row != nil{
 		for row.Next(){
 			var advert AdvertAPI.AdvertOutput
-			row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Location, &advert.PhoneNumber,
+			err = row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Location, &advert.PhoneNumber,
 				&advert.Price, &advert.PublishDate, &advert.Views, &advert.ImagesCount, &advert.UserId, &advert.CommentCount,
 				&advert.Category)
 			if advert.ImagesCount != 0 {

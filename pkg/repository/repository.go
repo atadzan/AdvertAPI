@@ -10,7 +10,6 @@ type Advert interface {
 	GetAll(advertPerPage, offset int) ([]AdvertAPI.AdvertOutput, error)
 	GetById(id int) (AdvertAPI.AdvertOutput, error)
 	CountAdverts() (int, error)
-	AddDB(file AdvertAPI.AdvertImage) (string, error)
 	GetImage(id int) ([]AdvertAPI.AdvertImage, error)
 	Delete(id int) error
 	Update(id int, advert AdvertAPI.AdvertInput) error

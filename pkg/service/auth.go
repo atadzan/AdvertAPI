@@ -12,7 +12,7 @@ import (
 
 const(
 	salt = "abcdefghlmn123456"
-	tokenTLL = 12 * time.Hour
+	tokenTLL = 24 * time.Hour
 	signingKey = "qwertyuiop654321"
 )
 
