@@ -32,7 +32,7 @@ func(h *Handler) addComment(c *gin.Context){
 		return
 	}
 	var comment AdvertAPI.InputComm
-	if err := c.BindJSON(&comment); err != nil {
+	if err = c.BindJSON(&comment); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}

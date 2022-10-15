@@ -52,7 +52,7 @@ func InputProcess(c *gin.Context, form *multipart.Form, userId int) (AdvertAPI.A
 	var advert AdvertAPI.AdvertInput
 	advert.Title = c.PostForm("title")
 	advert.Description = c.PostForm("description")
-	advert.Category = c.PostForm("category")
+	advert.Category, _ = strconv.Atoi(c.PostForm("category"))
 	advert.Location = c.PostForm("location")
 	advert.PhoneNumber = c.PostForm("phone_number")
 	advert.Price, _ = strconv.Atoi(c.PostForm("price"))
@@ -78,21 +78,18 @@ func InputProcess(c *gin.Context, form *multipart.Form, userId int) (AdvertAPI.A
 			}
 			filepath := tempFile.Name()
 			file.Path = filepath
-
 			//read all the contents of our uploaded file into a byte array
 			fileBytes, err := io.ReadAll(image)
 			if err != nil {
 				newErrorResponse(c, http.StatusInternalServerError, err.Error())
 				return advert, err
 			}
-
 			//Write this byte array to our temporary array
 			_, err = tempFile.Write(fileBytes)
 			if err != nil {
 				newErrorResponse(c, http.StatusInternalServerError, err.Error())
 				return advert, err
 			}
-
 			advert.Images = append(advert.Images, file)
 		}
 	}
@@ -123,7 +120,7 @@ func (h *Handler) getAdverts(c *gin.Context) {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	const advertPerPage = 5
+	const advertPerPage = 10
 	pageCount := int(math.Ceil(float64(advertCount) / float64(advertPerPage)))
 	if pageCount == 0 {
 		pageCount = 1
@@ -133,9 +130,9 @@ func (h *Handler) getAdverts(c *gin.Context) {
 		return
 	}
 	offset := (page - 1) * advertPerPage
-	adverts, err := h.services.Advert.GetAll(advertPerPage, offset)
-	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+	adverts, ok := h.services.Advert.GetAll(advertPerPage, offset)
+	if ok != nil {
+		newErrorResponse(c, http.StatusInternalServerError, ok.Error())
 		return
 	}
 	c.JSON(http.StatusOK, adverts)
@@ -165,6 +162,33 @@ func (h *Handler) getAdvertById(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, advert)
+}
+
+func(h *Handler) getImage(c *gin.Context){
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil{
+		newErrorResponse(c, http.StatusBadRequest, "invalid id param")
+		return
+	}
+	object, ok := h.services.Advert.GetImage(id)
+	if ok != nil {
+		newErrorResponse(c, http.StatusInternalServerError, ok.Error())
+		return
+	}
+	for _, i := range object{
+		fi, err1 := os.Open(i.Path)
+		if err1 != nil {
+			newErrorResponse(c, http.StatusInternalServerError, err1.Error())
+			return
+		}
+		_, err = io.Copy(c.Writer, fi)
+		if err != nil {
+			newErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+		return
+	}
+	return
 }
 
 // @Summary     Delete Advert
@@ -266,7 +290,7 @@ func (h *Handler) addFavList(c *gin.Context) {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, nil)
+	c.JSON(http.StatusOK, "Successfully added")
 }
 
 // @Summary     Get User Favourite List
@@ -320,7 +344,38 @@ func (h *Handler) deleteFav(c *gin.Context) {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, nil)
+	c.JSON(http.StatusOK, "Successfully deleted")
+}
+
+// @Summary     Check Favourite List
+// @Security    ApiKeyAuth
+// @Tags        fav_list
+// @Description Check Advert from Favourite List
+// @ID          fav_list
+// @Accept      json
+// @Produce     json
+// @Param       id      path     int    true "advert"
+// @Success     200     {bool} bool "status"
+// @Failure     400     error    http.StatusBadRequest
+// @Failure     500     error    http.StatusInternalServerError
+// @Failure     default error    http.StatusBadRequest
+// @Router      /api/advert/fav/{id} [get]
+func(h *Handler) checkFav(c *gin.Context){
+	userId, err := getUserId(c)
+	if err != nil {
+		return
+	}
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	response, ok := h.services.Advert.CheckFavList(userId, id)
+	if ok != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, response)
 }
 
 // @Summary     Search
@@ -335,7 +390,7 @@ func (h *Handler) deleteFav(c *gin.Context) {
 // @Failure     500     error   http.StatusInternalServerError
 // @Failure     default error   http.StatusBadRequest
 // @Router      /api/advert/search [get]
-func(h *Handler) searchTitle(c *gin.Context){
+func(h *Handler) searchByTitle(c *gin.Context){
 	title := c.DefaultQuery("title", "Advert")
 	adverts, err := h.services.Advert.Search(title)
 	if err != nil {

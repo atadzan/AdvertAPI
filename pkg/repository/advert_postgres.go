@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/atadzan/AdvertAPI"
 	"github.com/jmoiron/sqlx"
@@ -24,7 +25,7 @@ func (r *AdvertPostgres) Add(advert AdvertAPI.AdvertInput) (int, error) {
 		return 0, nil
 	}
 	var id int
-	createAdvertQuery := fmt.Sprintf("INSERT INTO %s (title, description, category, location, phone_number,"+
+	createAdvertQuery := fmt.Sprintf("INSERT INTO %s (title, description, category_id, location, phone_number,"+
 		" price, publish_date, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id", advertsTable)
 	row := tx.QueryRow(createAdvertQuery, advert.Title, advert.Description, advert.Category, advert.Location,
 		advert.PhoneNumber, advert.Price, time.Now(), advert.UserId)
@@ -53,64 +54,34 @@ func (r *AdvertPostgres) Add(advert AdvertAPI.AdvertInput) (int, error) {
 	return id, tx.Commit()
 }
 
-func (r *AdvertPostgres) GetAll(advertPerPage, offset int) ([]AdvertAPI.AdvertInfo, error) {
-	var adverts []AdvertAPI.AdvertInfo
+func (r *AdvertPostgres) GetAll(advertPerPage, offset int) ([]AdvertAPI.AdvertOutput, error) {
+	var adverts []AdvertAPI.AdvertOutput
 	query := fmt.Sprintf("SELECT * FROM %s ORDER BY publish_date DESC LIMIT $1 OFFSET $2", advertsTable)
+	tx, err := r.db.Begin()
+	if err != nil {
+		return nil, err
+	}
 	row, ok := r.db.Query(query, advertPerPage, offset)
 	if ok != nil {
 		return nil, ok
 	}
 	for row.Next() {
-		var advert AdvertAPI.AdvertInfo
-		if err := row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Category, &advert.Location,
-			&advert.PhoneNumber, &advert.Price, &advert.PublishDate, &advert.Views, &advert.ImagesCount, &advert.UserId, &advert.CommentCount); err != nil {
-			return adverts, err
-		}
-		if advert.ImagesCount != 0 {
-			imageQuery := fmt.Sprintf("SELECT * FROM %s WHERE advert_id = $1", advertImages)
-			imageRow, err := r.db.Query(imageQuery, advert.Id)
-			if err != nil {
-				return nil, err
-			}
-			for imageRow.Next() {
-				var image AdvertAPI.AdvertImage
-				if imageRow != nil {
-					if err = imageRow.Scan(&image.Id, &image.Fname, &image.Fsize, &image.Ftype, &image.Path, &image.AdvertId); err != nil {
-						return nil, err
-					}
-				}
-				var res AdvertAPI.ImageUrl
-				url := fmt.Sprintf("http://192.168.1.181:8080/api/advert/image/%d", image.Id)
-				res.URL = url
-				advert.Images = append(advert.Images, res)
-			}
-		}
-		if advert.CommentCount != 0 {
-			commentQuery := fmt.Sprintf("SELECT * from %s WHERE advert_id=$1", commentsTable)
-			rows, err := r.db.Query(commentQuery, advert.Id)
-			if err != nil {
-				fmt.Println("No comments")
-			}
-			for rows.Next() {
-				var comment AdvertAPI.Comment
-				if err := rows.Scan(&comment.Id, &comment.AdvertId, &comment.Body, &comment.UserId, &comment.CreatedAt, &comment.UpdatedAt); err != nil {
-					return nil, err
-				}
-				advert.Comments = append(advert.Comments, comment)
-			}
+		advert, err1  := r.getAdvert(row, tx)
+		if err1 != nil{
+			return nil, err1
 		}
 		adverts = append(adverts, advert)
 	}
-	return adverts, nil
+	return adverts, tx.Commit()
 }
 
-func (r *AdvertPostgres) GetById(id int) (AdvertAPI.AdvertInfo, error) {
-	var advert AdvertAPI.AdvertInfo
+func (r *AdvertPostgres) GetById(id int) (AdvertAPI.AdvertOutput, error) {
+	var advert AdvertAPI.AdvertOutput
 	tx, err := r.db.Begin()
 	query := fmt.Sprintf("SELECT * FROM %s WHERE id = $1", advertsTable)
 	row := tx.QueryRow(query, id)
-	err = row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Category, &advert.Location,
-		&advert.PhoneNumber, &advert.Price, &advert.PublishDate, &advert.Views, &advert.ImagesCount, &advert.UserId, &advert.CommentCount)
+	err = row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Location,&advert.PhoneNumber,&advert.Price,
+		&advert.PublishDate, &advert.Views, &advert.ImagesCount, &advert.UserId,&advert.CommentCount, &advert.Category)
 	if err != nil {
 		return advert, err
 	}
@@ -118,43 +89,14 @@ func (r *AdvertPostgres) GetById(id int) (AdvertAPI.AdvertInfo, error) {
 	updateQuery := fmt.Sprintf("UPDATE %s SET views = $1 WHERE id = $2", advertsTable)
 	_, err = tx.Exec(updateQuery, advert.Views, id)
 	if err != nil {
-		tx.Rollback()
+		err = tx.Rollback()
 		return advert, err
 	}
 	if advert.ImagesCount != 0 {
-		imageQuery := fmt.Sprintf("SELECT * FROM %s WHERE advert_id = $1", advertImages)
-		imageRow, err := tx.Query(imageQuery, advert.Id)
-		if err != nil {
-			tx.Rollback()
-			return advert, err
-		}
-		for imageRow.Next() {
-			var image AdvertAPI.AdvertImage
-			if imageRow != nil {
-				if err := imageRow.Scan(&image.Id, &image.Fname, &image.Fsize, &image.Ftype, &image.Path, &image.AdvertId); err != nil {
-					return advert, err
-				}
-			}
-			var res AdvertAPI.ImageUrl
-			url := fmt.Sprintf("http://192.168.1.181:8080/api/advert/image/%d", image.Id)
-			res.URL = url
-			advert.Images = append(advert.Images, res)
-		}
+		advert, err = r.getAdvertImages(advert, tx)
 	}
 	if advert.CommentCount != 0 {
-		commentQuery := fmt.Sprintf("SELECT * from %s WHERE advert_id=$1", commentsTable)
-		rows, err := tx.Query(commentQuery, advert.Id)
-		if err != nil {
-			tx.Rollback()
-			return advert, err
-		}
-		for rows.Next() {
-			var comment AdvertAPI.Comment
-			if err := rows.Scan(&comment.Id, &comment.AdvertId, &comment.Body, &comment.UserId, &comment.CreatedAt, &comment.UpdatedAt); err != nil {
-				return advert, err
-			}
-			advert.Comments = append(advert.Comments, comment)
-		}
+		advert, err = r.getAdvertComments(advert, tx)
 	}
 	return advert, tx.Commit()
 }
@@ -167,15 +109,6 @@ func (r *AdvertPostgres) CountAdverts() (int, error) {
 	return count, err
 }
 
-func (r *AdvertPostgres) AddDB(file AdvertAPI.AdvertImage) (string, error) {
-	query := fmt.Sprintf("INSERT INTO %s (fname, fsize, ftype, path, advert_id) VALUES($1, $2, $3, $4, $5)", advertImages)
-	_, err := r.db.Exec(query, file.Fname, file.Fsize, file.Ftype, file.Path, file.AdvertId)
-	if err != nil {
-		return err.Error(), nil
-	}
-	return "Success", nil
-}
-
 func (r *AdvertPostgres) GetImage(id int) ([]AdvertAPI.AdvertImage, error) {
 	var image AdvertAPI.AdvertImage
 	var images []AdvertAPI.AdvertImage
@@ -184,7 +117,6 @@ func (r *AdvertPostgres) GetImage(id int) ([]AdvertAPI.AdvertImage, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	for row.Next() {
 		err = row.Scan(&image.Id, &image.Fname, &image.Fsize, &image.Ftype, &image.Path, &image.AdvertId)
 		if err != nil {
@@ -203,6 +135,9 @@ func (r *AdvertPostgres) GetImage(id int) ([]AdvertAPI.AdvertImage, error) {
 func (r *AdvertPostgres) Delete(id int) error {
 	query := fmt.Sprintf("DELETE FROM %s WHERE id= $1", advertsTable)
 	_, err := r.db.Exec(query, id)
+	if err != nil {
+		return err
+	}
 	return err
 }
 
@@ -221,7 +156,7 @@ func (r *AdvertPostgres) Update(id int, advert AdvertAPI.AdvertInput) error {
 		args = append(args, advert.Description)
 		argId++
 	}
-	if advert.Category != "" {
+	if advert.Category != 0 {
 		setValues = append(setValues, fmt.Sprintf("category=$%d", argId))
 		args = append(args, advert.Category)
 		argId++
@@ -267,63 +202,45 @@ func (r *AdvertPostgres) AddFav(userId, advertId int) error {
 	return nil
 }
 
-func (r *AdvertPostgres) GetFav(userId int) ([]AdvertAPI.AdvertInfo, error) {
-	var adverts []AdvertAPI.AdvertInfo
+func (r *AdvertPostgres) GetFav(userId int) ([]AdvertAPI.AdvertOutput, error) {
+	var adverts []AdvertAPI.AdvertOutput
 	var result pq.Int64Array
-
 	favQuery := fmt.Sprintf("SELECT fav_list[1:] FROM %s WHERE id=$1", usersTable)
 	favlist := r.db.QueryRow(favQuery, userId)
 	if err := favlist.Scan(&result); err != nil {
-		//tx.Rollback()
+		fmt.Println("Error in favlist")
 		return nil, err
 	}
-
 	favIds := []int64(result)
-
+	tx, err := r.db.Begin()
 	for _, id := range favIds {
-		var advert AdvertAPI.AdvertInfo
+		var advert AdvertAPI.AdvertOutput
 		query := fmt.Sprintf("SELECT * FROM %s WHERE id = $1", advertsTable)
-		row := r.db.QueryRow(query, id)
-		if err := row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Category, &advert.Location,
-			&advert.PhoneNumber, &advert.Price, &advert.PublishDate, &advert.Views, &advert.ImagesCount, &advert.UserId, &advert.CommentCount); err != nil {
+
+		if err != nil {
+			return nil, err
+		}
+		row := tx.QueryRow(query, id)
+		if err = row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Location, &advert.PhoneNumber,
+			&advert.Price, &advert.PublishDate, &advert.Views, &advert.ImagesCount, &advert.UserId, &advert.CommentCount,
+			&advert.Category); err != nil {
 			return adverts, err
 		}
 		if advert.ImagesCount != 0 {
-			imageQuery := fmt.Sprintf("SELECT * FROM %s WHERE advert_id = $1", advertImages)
-			imageRow, err := r.db.Query(imageQuery, id)
+			advert, err = r.getAdvertImages(advert, tx)
 			if err != nil {
 				return nil, err
 			}
-			for imageRow.Next() {
-				var image AdvertAPI.AdvertImage
-				if imageRow != nil {
-					if err := imageRow.Scan(&image.Id, &image.Fname, &image.Fsize, &image.Ftype, &image.Path, &image.AdvertId); err != nil {
-						return nil, err
-					}
-				}
-				var res AdvertAPI.ImageUrl
-				url := fmt.Sprintf("http://192.168.1.181:8080/api/advert/image/%d", image.Id)
-				res.URL = url
-				advert.Images = append(advert.Images, res)
-			}
 		}
 		if advert.CommentCount != 0 {
-			commentQuery := fmt.Sprintf("SELECT * from %s WHERE advert_id=$1", commentsTable)
-			rows, err := r.db.Query(commentQuery, advert.Id)
+			advert, err = r.getAdvertComments(advert, tx)
 			if err != nil {
-				return adverts, err
-			}
-			for rows.Next() {
-				var comment AdvertAPI.Comment
-				if err := rows.Scan(&comment.Id, &comment.AdvertId, &comment.Body, &comment.UserId, &comment.CreatedAt, &comment.UpdatedAt); err != nil {
-					return adverts, err
-				}
-				advert.Comments = append(advert.Comments, comment)
+				return nil, err
 			}
 		}
 		adverts = append(adverts, advert)
 	}
-	return adverts, nil
+	return adverts, tx.Commit()
 }
 
 func (r *AdvertPostgres) DeleteFav(userId, advertId int) error {
@@ -336,7 +253,7 @@ func (r *AdvertPostgres) DeleteFav(userId, advertId int) error {
 	favQuery := fmt.Sprintf("SELECT fav_list FROM %s WHERE id=$1", usersTable)
 	favlist := tx.QueryRow(favQuery, userId)
 	if err = favlist.Scan(&result1); err != nil {
-		tx.Rollback()
+		 err = tx.Rollback()
 		return err
 	}
 	intRes := []int64(result1)
@@ -350,62 +267,109 @@ func (r *AdvertPostgres) DeleteFav(userId, advertId int) error {
 	inputRes := fmt.Sprintf("UPDATE %s SET fav_list = $1 WHERE id=$2", usersTable)
 	_, err = tx.Exec(inputRes, pq.Array(intRes), userId)
 	if err != nil {
-		tx.Rollback()
+		err = tx.Rollback()
 		return err
 	}
 	return tx.Commit()
 }
 
-func (r *AdvertPostgres) Search(search string) ([]AdvertAPI.AdvertInfo, error) {
-	var adverts []AdvertAPI.AdvertInfo
+func(r *AdvertPostgres) CheckFavList(userId, advertId int)(bool, error){
+	var response bool
+	var result pq.Int64Array
+	favQuery := fmt.Sprintf("SELECT fav_list FROM %s WHERE id=$1", usersTable)
+	favlist := r.db.QueryRow(favQuery, userId)
+	if err := favlist.Scan(&result); err != nil {
+		fmt.Println("Error in favlist")
+		return response, err
+	}
+	favIds := []int64(result)
+	id := int64(advertId)
+	for _, v := range favIds {
+		if  id == v  {
+			response = true
+		}else{
+			response = false
+		}
+	}
+	return response, nil
+}
+
+func (r *AdvertPostgres) Search(search string) ([]AdvertAPI.AdvertOutput, error) {
+	var adverts []AdvertAPI.AdvertOutput
 	query := fmt.Sprintf("SELECT * FROM %s AS a WHERE a.title LIKE $1 ORDER BY a.publish_date DESC", advertsTable)
 	row, err := r.db.Query(query, "%"+search+"%")
 	if err != nil {
-
-		return nil, err
+		return adverts, err
 	}
+	tx, err := r.db.Begin()
 	for row.Next() {
-		var advert AdvertAPI.AdvertInfo
-		if err := row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Category, &advert.Location,
-			&advert.PhoneNumber, &advert.Price, &advert.PublishDate, &advert.Views, &advert.ImagesCount, &advert.UserId, &advert.CommentCount); err != nil {
-			return nil, err
-		}
-		if advert.ImagesCount != 0 {
-			imageQuery := fmt.Sprintf("SELECT * FROM %s WHERE advert_id = $1", advertImages)
-			imageRow, err := r.db.Query(imageQuery, advert.Id)
-			if err != nil {
-				//tx.Rollback()
-				return nil, err
-			}
-			for imageRow.Next() {
-				var image AdvertAPI.AdvertImage
-				if imageRow != nil {
-					if err := imageRow.Scan(&image.Id, &image.Fname, &image.Fsize, &image.Ftype, &image.Path, &image.AdvertId); err != nil {
-						return nil, err
-					}
-				}
-				var res AdvertAPI.ImageUrl
-				url := fmt.Sprintf("http://192.168.1.181:8080/api/advert/image/%d", image.Id)
-				res.URL = url
-				advert.Images = append(advert.Images, res)
-			}
-		}
-		if advert.CommentCount != 0 {
-			commentQuery := fmt.Sprintf("SELECT * from %s WHERE advert_id=$1", commentsTable)
-			rows, err := r.db.Query(commentQuery, advert.Id)
-			if err != nil {
-				//tx.Rollback()
-				return adverts, err
-			}
-			for rows.Next() {
-				var comment AdvertAPI.Comment
-				if err := rows.Scan(&comment.Id, &comment.AdvertId, &comment.Body, &comment.UserId, &comment.CreatedAt, &comment.UpdatedAt); err != nil {
-					return adverts, err
-				}
-				advert.Comments = append(advert.Comments, comment)
-			}
+		advert, ok := r.getAdvert(row, tx)
+		if ok != nil {
+			return nil, ok
 		}
 		adverts = append(adverts, advert)
 	}
-	return adverts, nil
+	if adverts == nil{
+		emptyAdverts := []AdvertAPI.AdvertOutput{}
+		adverts = emptyAdverts
+	}
+	return adverts, tx.Commit()
+}
+
+func (r *AdvertPostgres) getAdvert(row *sql.Rows, tx *sql.Tx)(AdvertAPI.AdvertOutput, error){
+	var advert AdvertAPI.AdvertOutput
+	var err error
+	if err = row.Scan(&advert.Id, &advert.Title, &advert.Description, &advert.Location,
+		&advert.PhoneNumber, &advert.Price, &advert.PublishDate, &advert.Views, &advert.ImagesCount, &advert.UserId, &advert.CommentCount, &advert.Category); err != nil {
+		return advert, err
+	}
+	if advert.ImagesCount != 0 {
+		advert, err = r.getAdvertImages(advert, tx)
+		if err !=nil {
+			fmt.Println("Internal server error")
+		}
+	}
+	if advert.CommentCount != 0 {
+		advert, err = r.getAdvertComments(advert, tx)
+	}
+	return advert, nil
+}
+
+func(r *AdvertPostgres) getAdvertImages(advert AdvertAPI.AdvertOutput, tx *sql.Tx) (AdvertAPI.AdvertOutput, error) {
+	imageQuery := fmt.Sprintf("SELECT * FROM %s WHERE advert_id = $1", advertImages)
+	imageRow, ok := tx.Query(imageQuery, advert.Id)
+	if ok != nil {
+		ok = tx.Rollback()
+		return advert, ok
+	}
+	for imageRow.Next() {
+		var image AdvertAPI.AdvertImage
+		if imageRow != nil {
+			if err := imageRow.Scan(&image.Id, &image.Fname, &image.Fsize, &image.Ftype, &image.Path, &image.AdvertId); err != nil {
+				return advert, err
+			}
+		}
+		var res AdvertAPI.ImageUrl
+		url := fmt.Sprintf("http://192.168.1.181:8080/api/advert/image/%d", image.Id)
+		res.URL = url
+		advert.Images = append(advert.Images, res)
+	}
+	return advert, nil
+}
+
+func(r *AdvertPostgres) getAdvertComments(advert AdvertAPI.AdvertOutput, tx *sql.Tx)(AdvertAPI.AdvertOutput, error){
+	commentQuery := fmt.Sprintf("SELECT * from %s WHERE advert_id=$1", commentsTable)
+	rows, er := tx.Query(commentQuery, advert.Id)
+	if er != nil {
+		er = tx.Rollback()
+		fmt.Println("No comments")
+	}
+	for rows.Next() {
+		var comment AdvertAPI.Comment
+		if err := rows.Scan(&comment.Id, &comment.AdvertId, &comment.Body, &comment.UserId, &comment.CreatedAt, &comment.UpdatedAt); err != nil {
+			return advert, err
+		}
+		advert.Comments = append(advert.Comments, comment)
+	}
+	return advert, nil
 }

@@ -12,11 +12,11 @@ type Handler struct {
 	services *service.Service
 }
 
-func NewHandler(services *service.Service) *Handler{
+func NewHandler(services *service.Service) *Handler {
 	return &Handler{services: services}
 }
 
-func (h *Handler) InitRoutes() *gin.Engine{
+func (h *Handler) InitRoutes() *gin.Engine {
 	router := gin.New()
 
 	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -29,8 +29,9 @@ func (h *Handler) InitRoutes() *gin.Engine{
 			advert.DELETE("/:id", h.deleteAdvert)
 			advert.PUT("/edit/:id", h.updateAdvert)
 			advert.PUT("/:id", h.addFavList)
-			advert.GET("fav", h.getFavList)
+			advert.GET("/fav", h.getFavList)
 			advert.DELETE("fav/:id", h.deleteFav)
+			advert.GET("/fav/:id", h.checkFav)
 		}
 		comment := api.Group(":id/comment")
 		{
@@ -39,11 +40,17 @@ func (h *Handler) InitRoutes() *gin.Engine{
 			comment.PUT("/:comment_id", h.updComment)
 		}
 	}
-	advert := router.Group("api/advert")
+	noAuth := router.Group("/api")
 	{
-		advert.GET("/", h.getAdverts)
-		advert.GET("/:id", h.getAdvertById)
-		advert.GET("/search", h.searchTitle)
+		noAuth.GET("/advert", h.getAdverts)
+		noAuth.GET("/advert/:id", h.getAdvertById)
+		noAuth.GET("/advert/image/:id", h.getImage)
+		noAuth.GET("/advert/search", h.searchByTitle)
+		noAuth.GET("/category/main", h.getMainCategory)
+		noAuth.GET("/categories/:id", h.getNestedCategories)
+		noAuth.GET("/category/:id", h.getCategoryAdverts)
+		noAuth.POST("/category", h.addCategory)
+
 	}
 	auth := router.Group("/auth")
 	{
