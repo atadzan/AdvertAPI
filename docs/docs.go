@@ -44,7 +44,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/AdvertAPI.AdvertInfo"
+                                "$ref": "#/definitions/AdvertAPI.AdvertOutput"
                             }
                         }
                     },
@@ -87,8 +87,13 @@ const docTemplate = `{
                 "summary": "Add Advert",
                 "operationId": "add_advert",
                 "parameters": [
-                    {
+                 	 {
                         "type": "string",
+                        "name": "title",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
                         "name": "category",
                         "in": "formData"
                     },
@@ -110,16 +115,6 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "name": "price",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "name": "title",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "user_id",
                         "in": "formData"
                     },
 					{
@@ -168,7 +163,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "advert"
+                    "fav_list"
                 ],
                 "summary": "Get User Favourite List",
                 "operationId": "get_fav",
@@ -201,13 +196,13 @@ const docTemplate = `{
             }
         },
         "/api/advert/fav/{id}": {
-            "post": {
+            "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Add Advert to Favourite List",
+                "description": "Check Advert from Favourite List",
                 "consumes": [
                     "application/json"
                 ],
@@ -215,14 +210,14 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "advert"
+                    "fav_list"
                 ],
-                "summary": "Add Advert to Favourite List",
-                "operationId": "add_fav",
+                "summary": "Check Favourite List",
+                "operationId": "fav_list",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "credentials",
+                        "description": "advert",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -232,7 +227,7 @@ const docTemplate = `{
                     "200": {
                         "description": "status",
                         "schema": {
-                            "type": "string"
+                            "type": "bool"
                         }
                     },
                     "400": {
@@ -269,7 +264,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "advert"
+                    "fav_list"
                 ],
                 "summary": "Delete Advert from Favourite List",
                 "operationId": "del_fav",
@@ -339,7 +334,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/AdvertAPI.AdvertInfo"
+                                "$ref": "#/definitions/AdvertAPI.AdvertOutput"
                             }
                         }
                     },
@@ -391,7 +386,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/AdvertAPI.AdvertInfo"
+                            "$ref": "#/definitions/AdvertAPI.AdvertOutput"
                         }
                     },
                     "400": {
@@ -420,7 +415,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Update Advert",
+                "description": "Add Advert to Favourite List",
                 "consumes": [
                     "application/json"
                 ],
@@ -428,70 +423,17 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "advert"
+                    "fav_list"
                 ],
-                "summary": "Update Advert",
-                "operationId": "update_advert",
+                "summary": "Add Advert to Favourite List",
+                "operationId": "add_fav",
                 "parameters": [
                     {
-                        "type": "string",
-                        "name": "category",
-                        "in": "formData"
-                    },
-                    {
                         "type": "integer",
-                        "name": "comment_count",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "name": "description",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
+                        "description": "credentials",
                         "name": "id",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "images_count",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "name": "location",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "name": "phone_number",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "price",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "name": "publish_date",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "name": "title",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "user_id",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "views",
-                        "in": "formData"
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -576,7 +518,222 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/advert/{id}/comment/{comment_id}": {
+        "/api/categories/{id}": {
+            "get": {
+                "description": "Get Nested Categories of main category",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "category"
+                ],
+                "summary": "Get Nested Categories",
+                "operationId": "get_nested",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "main category_id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Nested category",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/AdvertAPI.CategoryOutput"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "error"
+                        }
+                    },
+                    "default": {
+                        "description": "",
+                        "schema": {
+                            "type": "error"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/category/main": {
+            "get": {
+                "description": "Get main categories",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "category"
+                ],
+                "summary": "Get Main Categories",
+                "operationId": "get_category",
+                "responses": {
+                    "200": {
+                        "description": "status",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/AdvertAPI.CategoryOutput"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "error"
+                        }
+                    },
+                    "default": {
+                        "description": "",
+                        "schema": {
+                            "type": "error"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/category/{id}": {
+            "get": {
+                "description": "Get Adverts by Category id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "category"
+                ],
+                "summary": "Get Category Adverts",
+                "operationId": "get_category_adverts",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "category_id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "adverts",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/AdvertAPI.AdvertOutput"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "error"
+                        }
+                    },
+                    "default": {
+                        "description": "",
+                        "schema": {
+                            "type": "error"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/{id}/comment": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Add Comment to Advert",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "comment"
+                ],
+                "summary": "Add Comment",
+                "operationId": "add_comment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "advert id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "comment body",
+                        "name": "comment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/AdvertAPI.InputComm"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "id",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "error"
+                        }
+                    },
+                    "default": {
+                        "description": "",
+                        "schema": {
+                            "type": "error"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/{id}/comment/{comment_id}": {
             "put": {
                 "security": [
                     {
@@ -602,6 +759,22 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "comment ID",
+                        "name": "comment_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "comment body",
+                        "name": "comment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/AdvertAPI.InputComm"
+                        }
                     }
                 ],
                 "responses": {
@@ -656,67 +829,18 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
                     },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "error"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "error"
-                        }
-                    },
-                    "default": {
-                        "description": "",
-                        "schema": {
-                            "type": "error"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/{id}/comment": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Add Comment to Advert",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "comment"
-                ],
-                "summary": "Add Comment",
-                "operationId": "add_comment",
-                "parameters": [
                     {
                         "type": "integer",
-                        "description": "advert id",
-                        "name": "id",
+                        "description": "comment ID",
+                        "name": "comment_id",
                         "in": "path",
                         "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "id",
+                        "description": "OK",
                         "schema": {
                             "type": "string"
                         }
@@ -873,11 +997,20 @@ const docTemplate = `{
                 }
             }
         },
-        "AdvertAPI.AdvertInfo": {
+        "AdvertAPI.AdvertOutput": {
             "type": "object",
             "properties": {
-                "category": {
+                 "id": {
+                    "type": "integer"
+                },
+				 "title": {
                     "type": "string"
+                },
+				"description": {
+                    "type": "string"
+                },
+				"category": {
+                    "type": "integer"
                 },
                 "comment_count": {
                     "type": "integer"
@@ -887,12 +1020,6 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/AdvertAPI.Comment"
                     }
-                },
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
                 },
                 "images": {
                     "type": "array",
@@ -915,9 +1042,6 @@ const docTemplate = `{
                 "publish_date": {
                     "type": "string"
                 },
-                "title": {
-                    "type": "string"
-                },
                 "user_id": {
                     "type": "integer"
                 },
@@ -926,9 +1050,29 @@ const docTemplate = `{
                 }
             }
         },
+        "AdvertAPI.CategoryOutput": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+             	 "title": {
+                    "type": "string"
+                },
+                "main": {
+                    "type": "boolean"
+                },
+                "parent_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "AdvertAPI.Comment": {
             "type": "object",
             "properties": {
+                "id": {
+                    "type": "integer"
+                },
                 "advert_id": {
                     "type": "integer"
                 },
@@ -937,9 +1081,6 @@ const docTemplate = `{
                 },
                 "created_at": {
                     "type": "string"
-                },
-                "id": {
-                    "type": "integer"
                 },
                 "updated_at": {
                     "type": "string"
@@ -957,13 +1098,21 @@ const docTemplate = `{
                 }
             }
         },
+        "AdvertAPI.InputComm": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "string"
+                }
+            }
+        },
         "AdvertAPI.SignInInput": {
             "type": "object",
             "properties": {
                  "username": {
                     "type": "string"
                 },
-				"password": {
+				 "password": {
                     "type": "string"
                 }
             }
@@ -971,7 +1120,7 @@ const docTemplate = `{
         "AdvertAPI.SignUpInput": {
             "type": "object",
             "properties": {
-               	 "username": {
+               	"username": {
                     "type": "string"
                 },
                 "password": {

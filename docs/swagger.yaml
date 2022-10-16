@@ -15,10 +15,10 @@ definitions:
       path:
         type: string
     type: object
-  AdvertAPI.AdvertInfo:
+  AdvertAPI.AdvertOutput:
     properties:
       category:
-        type: string
+        type: integer
       comment_count:
         type: integer
       comments:
@@ -50,6 +50,17 @@ definitions:
       views:
         type: integer
     type: object
+  AdvertAPI.CategoryOutput:
+    properties:
+      id:
+        type: integer
+      main:
+        type: boolean
+      parent_id:
+        type: integer
+      title:
+        type: string
+    type: object
   AdvertAPI.Comment:
     properties:
       advert_id:
@@ -68,6 +79,11 @@ definitions:
   AdvertAPI.ImageUrl:
     properties:
       url:
+        type: string
+    type: object
+  AdvertAPI.InputComm:
+    properties:
+      body:
         type: string
     type: object
   AdvertAPI.SignInInput:
@@ -105,6 +121,12 @@ paths:
         name: id
         required: true
         type: integer
+      - description: comment body
+        in: body
+        name: comment
+        required: true
+        schema:
+          $ref: '#/definitions/AdvertAPI.InputComm'
       produces:
       - application/json
       responses:
@@ -129,6 +151,93 @@ paths:
       summary: Add Comment
       tags:
       - comment
+  /api/{id}/comment/{comment_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Advert Comment by ID
+      operationId: delete_comment
+      parameters:
+      - description: advert ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: comment ID
+        in: path
+        name: comment_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: error
+        "500":
+          description: Internal Server Error
+          schema:
+            type: error
+        default:
+          description: ""
+          schema:
+            type: error
+      security:
+      - ApiKeyAuth: []
+      summary: Delete Comment
+      tags:
+      - comment
+    put:
+      consumes:
+      - application/json
+      description: Update Advert Comment By ID
+      operationId: update comment
+      parameters:
+      - description: advert ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: comment ID
+        in: path
+        name: comment_id
+        required: true
+        type: integer
+      - description: comment body
+        in: body
+        name: comment
+        required: true
+        schema:
+          $ref: '#/definitions/AdvertAPI.InputComm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: error
+        "500":
+          description: Internal Server Error
+          schema:
+            type: error
+        default:
+          description: ""
+          schema:
+            type: error
+      security:
+      - ApiKeyAuth: []
+      summary: Update Comment
+      tags:
+      - comment
   /api/advert:
     get:
       consumes:
@@ -147,7 +256,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/AdvertAPI.AdvertInfo'
+              $ref: '#/definitions/AdvertAPI.AdvertOutput'
             type: array
         "400":
           description: Bad Request
@@ -172,7 +281,7 @@ paths:
       parameters:
       - in: formData
         name: category
-        type: string
+        type: integer
       - in: formData
         name: description
         type: string
@@ -268,7 +377,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/AdvertAPI.AdvertInfo'
+            $ref: '#/definitions/AdvertAPI.AdvertOutput'
         "400":
           description: Bad Request
           schema:
@@ -287,44 +396,13 @@ paths:
     put:
       consumes:
       - application/json
-      description: Update Advert
-      operationId: update_advert
+      description: Add Advert to Favourite List
+      operationId: add_fav
       parameters:
-      - in: formData
-        name: category
-        type: string
-      - in: formData
-        name: comment_count
-        type: integer
-      - in: formData
-        name: description
-        type: string
-      - in: formData
+      - description: credentials
+        in: path
         name: id
-        type: integer
-      - in: formData
-        name: images_count
-        type: integer
-      - in: formData
-        name: location
-        type: string
-      - in: formData
-        name: phone_number
-        type: string
-      - in: formData
-        name: price
-        type: integer
-      - in: formData
-        name: publish_date
-        type: string
-      - in: formData
-        name: title
-        type: string
-      - in: formData
-        name: user_id
-        type: integer
-      - in: formData
-        name: views
+        required: true
         type: integer
       produces:
       - application/json
@@ -347,80 +425,9 @@ paths:
             type: error
       security:
       - ApiKeyAuth: []
-      summary: Update Advert
+      summary: Add Advert to Favourite List
       tags:
-      - advert
-  /api/advert/{id}/comment/{comment_id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete Advert Comment by ID
-      operationId: delete_comment
-      parameters:
-      - description: advert ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema:
-            type: error
-        "500":
-          description: Internal Server Error
-          schema:
-            type: error
-        default:
-          description: ""
-          schema:
-            type: error
-      security:
-      - ApiKeyAuth: []
-      summary: Delete Comment
-      tags:
-      - comment
-    put:
-      consumes:
-      - application/json
-      description: Update Advert Comment By ID
-      operationId: update comment
-      parameters:
-      - description: advert ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema:
-            type: error
-        "500":
-          description: Internal Server Error
-          schema:
-            type: error
-        default:
-          description: ""
-          schema:
-            type: error
-      security:
-      - ApiKeyAuth: []
-      summary: Update Comment
-      tags:
-      - comment
+      - fav_list
   /api/advert/fav:
     get:
       description: Get User Favourite List
@@ -448,7 +455,7 @@ paths:
       - ApiKeyAuth: []
       summary: Get User Favourite List
       tags:
-      - advert
+      - fav_list
   /api/advert/fav/{id}:
     delete:
       consumes:
@@ -484,14 +491,14 @@ paths:
       - ApiKeyAuth: []
       summary: Delete Advert from Favourite List
       tags:
-      - advert
-    post:
+      - fav_list
+    get:
       consumes:
       - application/json
-      description: Add Advert to Favourite List
-      operationId: add_fav
+      description: Check Advert from Favourite List
+      operationId: fav_list
       parameters:
-      - description: credentials
+      - description: advert
         in: path
         name: id
         required: true
@@ -502,7 +509,7 @@ paths:
         "200":
           description: status
           schema:
-            type: string
+            type: bool
         "400":
           description: Bad Request
           schema:
@@ -517,9 +524,9 @@ paths:
             type: error
       security:
       - ApiKeyAuth: []
-      summary: Add Advert to Favourite List
+      summary: Check Favourite List
       tags:
-      - advert
+      - fav_list
   /api/advert/search:
     get:
       consumes:
@@ -539,7 +546,7 @@ paths:
           description: status
           schema:
             items:
-              $ref: '#/definitions/AdvertAPI.AdvertInfo'
+              $ref: '#/definitions/AdvertAPI.AdvertOutput'
             type: array
         "400":
           description: Bad Request
@@ -556,6 +563,106 @@ paths:
       summary: Search
       tags:
       - advert
+  /api/categories/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get Nested Categories of main category
+      operationId: get_nested
+      parameters:
+      - description: main category_id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Nested category
+          schema:
+            items:
+              $ref: '#/definitions/AdvertAPI.CategoryOutput'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: error
+        "500":
+          description: Internal Server Error
+          schema:
+            type: error
+        default:
+          description: ""
+          schema:
+            type: error
+      summary: Get Nested Categories
+      tags:
+      - category
+  /api/category/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get Adverts by Category id
+      operationId: get_category_adverts
+      parameters:
+      - description: category_id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: adverts
+          schema:
+            items:
+              $ref: '#/definitions/AdvertAPI.AdvertOutput'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: error
+        "500":
+          description: Internal Server Error
+          schema:
+            type: error
+        default:
+          description: ""
+          schema:
+            type: error
+      summary: Get Category Adverts
+      tags:
+      - category
+  /api/category/main:
+    get:
+      description: Get main categories
+      operationId: get_category
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: status
+          schema:
+            items:
+              $ref: '#/definitions/AdvertAPI.CategoryOutput'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: error
+        "500":
+          description: Internal Server Error
+          schema:
+            type: error
+        default:
+          description: ""
+          schema:
+            type: error
+      summary: Get Main Categories
+      tags:
+      - category
   /auth/sign-in:
     post:
       consumes:

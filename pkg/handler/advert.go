@@ -103,7 +103,7 @@ func InputProcess(c *gin.Context, form *multipart.Form, userId int) (AdvertAPI.A
 // @Accept      json
 // @Produce     json
 //@Param       page    query   string false "page info"
-// @Success     200     {array} AdvertAPI.AdvertInfo
+// @Success     200     {array} AdvertAPI.AdvertOutput
 // @Failure     400     error   http.StatusBadRequest
 // @Failure     500     error   http.StatusInternalServerError
 // @Failure     default error   http.StatusBadRequest
@@ -145,7 +145,7 @@ func (h *Handler) getAdverts(c *gin.Context) {
 // @Accept      json
 // @Produce     json
 // @Param       id      path     int true "advert ID"
-// @Success     200     {object} AdvertAPI.AdvertInfo
+// @Success     200     {object} AdvertAPI.AdvertOutput
 // @Failure     400     error    http.StatusBadRequest
 // @Failure     500     error    http.StatusInternalServerError
 // @Failure     default error    http.StatusBadRequest
@@ -227,8 +227,8 @@ func (h *Handler) deleteAdvert(c *gin.Context) {
 // @ID          update_advert
 // @Accept      json
 // @Produce     json
-// @Param       form    formData AdvertAPI.AdvertInfo true "update advert info"
-// @Success     200     {string} string               "status"
+// @Param       form    formData AdvertAPI.AdvertOutput true "update advert info"
+// @Success     200     {string} string                 "status"
 // @Failure     400     error    http.StatusBadRequest
 // @Failure     500     error    http.StatusInternalServerError
 // @Failure     default error    http.StatusBadRequest
@@ -265,7 +265,7 @@ func (h *Handler) updateAdvert(c *gin.Context) {
 
 // @Summary     Add Advert to Favourite List
 // @Security    ApiKeyAuth
-// @Tags        advert
+// @Tags        fav_list
 // @Description Add Advert to Favourite List
 // @ID          add_fav
 // @Accept      json
@@ -275,7 +275,7 @@ func (h *Handler) updateAdvert(c *gin.Context) {
 // @Failure     400     error    http.StatusBadRequest
 // @Failure     500     error    http.StatusInternalServerError
 // @Failure     default error    http.StatusBadRequest
-// @Router      /api/advert/fav/{id} [post]
+// @Router      /api/advert/{id} [put]
 func (h *Handler) addFavList(c *gin.Context) {
 	userId, err := getUserId(c)
 	if err != nil {
@@ -295,7 +295,7 @@ func (h *Handler) addFavList(c *gin.Context) {
 
 // @Summary     Get User Favourite List
 // @Security    ApiKeyAuth
-// @Tags        advert
+// @Tags        fav_list
 // @Description Get User Favourite List
 // @ID          get_fav
 // @Produce     json
@@ -319,7 +319,7 @@ func (h *Handler) getFavList(c *gin.Context) {
 
 // @Summary     Delete Advert from Favourite List
 // @Security    ApiKeyAuth
-// @Tags        advert
+// @Tags        fav_list
 // @Description Delete Advert from Favourite List
 // @ID          del_fav
 // @Accept      json
@@ -354,11 +354,11 @@ func (h *Handler) deleteFav(c *gin.Context) {
 // @ID          fav_list
 // @Accept      json
 // @Produce     json
-// @Param       id      path     int    true "advert"
+// @Param       id      path   int  true "advert"
 // @Success     200     {bool} bool "status"
-// @Failure     400     error    http.StatusBadRequest
-// @Failure     500     error    http.StatusInternalServerError
-// @Failure     default error    http.StatusBadRequest
+// @Failure     400     error  http.StatusBadRequest
+// @Failure     500     error  http.StatusInternalServerError
+// @Failure     default error  http.StatusBadRequest
 // @Router      /api/advert/fav/{id} [get]
 func(h *Handler) checkFav(c *gin.Context){
 	userId, err := getUserId(c)
@@ -384,8 +384,8 @@ func(h *Handler) checkFav(c *gin.Context){
 // @ID          search_adv
 // @Accept      json
 // @Produce     json
-// @Param       title   query   string               true "title"
-// @Success     200     {array} AdvertAPI.AdvertInfo "status"
+// @Param       title   query   string                 true "title"
+// @Success     200     {array} AdvertAPI.AdvertOutput "status"
 // @Failure     400     error   http.StatusBadRequest
 // @Failure     500     error   http.StatusInternalServerError
 // @Failure     default error   http.StatusBadRequest

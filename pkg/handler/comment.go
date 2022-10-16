@@ -14,8 +14,9 @@ import (
 // @ID          add_comment
 // @Accept      json
 // @Produce     json
-// @Param       id      path int     true   "advert id"
-// @Success     200     {string} string "id"
+// @Param       id      path     int                 true "advert id"
+// @Param       comment body     AdvertAPI.InputComm true "comment body"
+// @Success     200     {string} string              "id"
 // @Failure     400     error    http.StatusBadRequest
 // @Failure     500     error    http.StatusInternalServerError
 // @Failure     default error    http.StatusBadRequest
@@ -52,11 +53,12 @@ func(h *Handler) addComment(c *gin.Context){
 // @Accept      json
 // @Produce     json
 // @Param       id      path     int true "advert ID"
+// @Param       comment_id    path     int true "comment ID"
 // @Success     200     {string} http.StatusOK
 // @Failure     400     error    http.StatusBadRequest
 // @Failure     500     error    http.StatusInternalServerError
 // @Failure     default error    http.StatusBadRequest
-// @Router      /api/advert/{id}/comment/{comment_id} [delete]
+// @Router      /api/{id}/comment/{comment_id} [delete]
 func(h *Handler) delComment(c *gin.Context){
 	userId, err := getUserId(c)
 	if err != nil {
@@ -87,12 +89,14 @@ func(h *Handler) delComment(c *gin.Context){
 // @ID          update comment
 // @Accept      json
 // @Produce     json
-// @Param       id      path     int true "advert ID"
-// @Success     200     {string} http.StatusOK
-// @Failure     400     error    http.StatusBadRequest
-// @Failure     500     error    http.StatusInternalServerError
-// @Failure     default error    http.StatusBadRequest
-// @Router      /api/advert/{id}/comment/{comment_id} [put]
+// @Param       id         path     int true "advert ID"
+// @Param       comment_id path     int true "comment ID"
+// @Param       comment body     AdvertAPI.InputComm true "comment body"
+// @Success     200        {string} http.StatusOK
+// @Failure     400        error    http.StatusBadRequest
+// @Failure     500        error    http.StatusInternalServerError
+// @Failure     default    error    http.StatusBadRequest
+// @Router      /api/{id}/comment/{comment_id} [put]
 func(h *Handler) updComment(c *gin.Context){
 	userId, err := getUserId(c)
 	if err != nil {

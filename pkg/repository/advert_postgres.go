@@ -287,8 +287,6 @@ func(r *AdvertPostgres) CheckFavList(userId, advertId int)(bool, error){
 	for _, v := range favIds {
 		if  id == v  {
 			response = true
-		}else{
-			response = false
 		}
 	}
 	return response, nil
